@@ -13,6 +13,36 @@ final class AppointmentsViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.appointments, [.sample(id: 1, status: .pending)])
     }
 
+    func testAutoRefreshPicksUpAProfessorsDecision() async throws {
+        let api = MockAPIClient()
+        api.appointmentsResult = .success([.sample(id: 1, status: .pending)])
+        let viewModel = AppointmentsViewModel(api: api)
+        await viewModel.load()
+
+        api.appointmentsResult = .success([.sample(id: 1, status: .confirmed)])
+        let refresh = Task { await viewModel.autoRefresh(every: .milliseconds(5)) }
+        for _ in 0..<500 where viewModel.appointments.first?.status != .confirmed {
+            try await Task.sleep(for: .milliseconds(5))
+        }
+        refresh.cancel()
+        await refresh.value
+
+        XCTAssertEqual(viewModel.appointments.first?.status, .confirmed)
+    }
+
+    func testFailedRefreshKeepsTheRowsAndShowsTheError() async {
+        let api = MockAPIClient()
+        api.appointmentsResult = .success([.sample(id: 1, status: .pending)])
+        let viewModel = AppointmentsViewModel(api: api)
+        await viewModel.load()
+
+        api.appointmentsResult = .failure(APIError.server("Server down"))
+        await viewModel.load()
+
+        XCTAssertEqual(viewModel.appointments.count, 1)
+        XCTAssertEqual(viewModel.errorMessage, "Server down")
+    }
+
     func testCancelReplacesOnlyThatAppointment() async {
         let api = MockAPIClient()
         api.appointmentsResult = .success([.sample(id: 1, status: .pending), .sample(id: 2, status: .confirmed)])

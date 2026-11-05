@@ -112,7 +112,11 @@ final class AppFlowUITests: XCTestCase {
 
         app.buttons["Cancel"].firstMatch.tap()
         XCTAssertTrue(app.alerts.buttons["Cancel Appointment"].waitForExistence(timeout: timeout))
-        app.alerts.buttons["Cancel Appointment"].tap()
+        // A tap during the alert's entrance can be dropped, so retry until the alert closes.
+        for _ in 0..<4 where app.alerts.firstMatch.exists {
+            app.alerts.buttons["Cancel Appointment"].tap()
+            _ = app.alerts.firstMatch.waitForNonExistence(timeout: 5)
+        }
         let confirmedGone = NSPredicate(format: "exists == false")
         let confirmed = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "· Confirmed")).firstMatch
         expectation(for: confirmedGone, evaluatedWith: confirmed)

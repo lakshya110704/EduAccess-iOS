@@ -110,6 +110,49 @@ final class ProfessorsViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.errorMessage, "Only students have a list.")
     }
 
+    func testAutoRefreshKeepsLoadingUntilCancelled() async throws {
+        let api = MockAPIClient()
+        let viewModel = ProfessorsViewModel(api: api)
+
+        let refresh = Task { await viewModel.autoRefresh(every: .milliseconds(5)) }
+        for _ in 0..<500 where api.myProfessorsCount < 3 {
+            try await Task.sleep(for: .milliseconds(5))
+        }
+        XCTAssertGreaterThanOrEqual(api.myProfessorsCount, 3)
+
+        refresh.cancel()
+        await refresh.value
+        let countAfterCancel = api.myProfessorsCount
+        try await Task.sleep(for: .milliseconds(50))
+        XCTAssertEqual(api.myProfessorsCount, countAfterCancel)
+    }
+
+    func testAutoRefreshPicksUpAStatusChange() async throws {
+        let api = MockAPIClient()
+        api.professorsResult = .success([.sample(isMine: true, status: .free)])
+        let viewModel = ProfessorsViewModel(api: api)
+        await viewModel.load()
+
+        api.professorsResult = .success([.sample(isMine: true, status: .busy)])
+        let refresh = Task { await viewModel.autoRefresh(every: .milliseconds(5)) }
+        for _ in 0..<500 where viewModel.professors.first?.availabilityStatus != .busy {
+            try await Task.sleep(for: .milliseconds(5))
+        }
+        refresh.cancel()
+        await refresh.value
+
+        XCTAssertEqual(viewModel.professors.first?.availabilityStatus, .busy)
+    }
+
+    func testEmptyStateWaitsForTheFirstLoad() async {
+        let viewModel = ProfessorsViewModel(api: MockAPIClient())
+        XCTAssertFalse(viewModel.hasLoaded)
+
+        await viewModel.load()
+
+        XCTAssertTrue(viewModel.hasLoaded)
+    }
+
     func testSuccessClearsAnEarlierError() async {
         let api = MockAPIClient()
         api.professorsResult = .failure(APIError.server("Server down"))

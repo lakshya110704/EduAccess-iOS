@@ -9,7 +9,7 @@ final class ProfessorsViewModel {
 
     var query = ""
     private(set) var professors: [Professor] = []
-    private(set) var isLoading = false
+    private(set) var hasLoaded = false
     private(set) var errorMessage: String?
 
     private let api: any APIClient
@@ -24,18 +24,25 @@ final class ProfessorsViewModel {
 
     /// Shows search results for a long enough query, otherwise the student's saved professors.
     func load() async {
-        isLoading = true
-        defer { isLoading = false }
+        let requested = query
         do {
-            professors = isSearching
+            let result = isSearching
                 ? try await api.searchProfessors(query.trimmingCharacters(in: .whitespaces))
                 : try await api.myProfessors()
+            // A timed refresh can finish after the student typed something new. Its result is out of date.
+            guard requested == query else { return }
+            professors = result
+            hasLoaded = true
             errorMessage = nil
         } catch where error.isCancellation {
             // A newer keystroke or refresh replaced this request.
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    func autoRefresh(every interval: Duration = .dashboardRefresh) async {
+        await repeatEvery(interval) { await load() }
     }
 
     /// In the saved list an unsaved professor leaves the list. In search results they stay, with the new state.

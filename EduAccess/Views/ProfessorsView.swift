@@ -38,15 +38,30 @@ struct ProfessorsView: View {
                 }
                 await viewModel.load()
             }
+            .task { await viewModel.autoRefresh() }
             .overlay { placeholder }
+            .safeAreaInset(edge: .top) { errorBanner }
+        }
+    }
+
+    /// With rows on screen a failed refresh keeps them visible, under a message.
+    @ViewBuilder
+    private var errorBanner: some View {
+        if let error = viewModel.errorMessage, !viewModel.professors.isEmpty {
+            Text(error)
+                .font(.footnote)
+                .foregroundStyle(.red)
+                .padding(8)
+                .frame(maxWidth: .infinity)
+                .background(.bar)
         }
     }
 
     @ViewBuilder
     private var placeholder: some View {
-        if let error = viewModel.errorMessage {
+        if let error = viewModel.errorMessage, viewModel.professors.isEmpty {
             ContentUnavailableView("Could Not Load Professors", systemImage: "wifi.exclamationmark", description: Text(error))
-        } else if viewModel.professors.isEmpty && !viewModel.isLoading {
+        } else if viewModel.professors.isEmpty && viewModel.hasLoaded {
             if viewModel.isSearching {
                 ContentUnavailableView.search(text: viewModel.query)
             } else {

@@ -5,7 +5,7 @@ import Observation
 @Observable
 final class AppointmentsViewModel {
     private(set) var appointments: [Appointment] = []
-    private(set) var isLoading = false
+    private(set) var hasLoaded = false
     private(set) var errorMessage: String?
 
     private let api: any APIClient
@@ -15,16 +15,19 @@ final class AppointmentsViewModel {
     }
 
     func load() async {
-        isLoading = true
-        defer { isLoading = false }
         do {
             appointments = try await api.appointments()
+            hasLoaded = true
             errorMessage = nil
         } catch where error.isCancellation {
             // The screen went away or a refresh replaced this request.
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    func autoRefresh(every interval: Duration = .dashboardRefresh) async {
+        await repeatEvery(interval) { await load() }
     }
 
     func confirm(_ appointment: Appointment) async {

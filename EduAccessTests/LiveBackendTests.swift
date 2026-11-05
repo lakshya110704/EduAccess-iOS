@@ -69,6 +69,27 @@ final class LiveBackendTests: XCTestCase {
         XCTAssertEqual(cancelled.status, .cancelled)
     }
 
+    @MainActor
+    func testStudentSeesAProfessorsDecisionWithoutReloading() async throws {
+        let student = try await loggedIn("student2", as: .student)
+        let professor = try await loggedIn("prof2", as: .professor)
+        let professorID = try await student.searchProfessors("Iyer")[0].id
+        let request = try await student.book(BookingRequest(professor: professorID, appointmentTime: randomFutureSlot(), slots: 1, topic: .doubt, details: ""))
+        let viewModel = AppointmentsViewModel(api: student)
+        await viewModel.load()
+        let refresh = Task { await viewModel.autoRefresh(every: .milliseconds(200)) }
+
+        _ = try await professor.confirm(appointmentID: request.id)
+        for _ in 0..<100 where viewModel.appointments.first(where: { $0.id == request.id })?.status != .confirmed {
+            try await Task.sleep(for: .milliseconds(100))
+        }
+        refresh.cancel()
+        await refresh.value
+
+        XCTAssertEqual(viewModel.appointments.first { $0.id == request.id }?.status, .confirmed)
+        _ = try await professor.cancel(appointmentID: request.id)
+    }
+
     func testStudentSavesAndUnsavesAProfessor() async throws {
         let student = try await loggedIn("student2", as: .student)
         let professor = try await student.searchProfessors("Gupta")[0]

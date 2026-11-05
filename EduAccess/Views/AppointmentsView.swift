@@ -18,7 +18,9 @@ struct AppointmentsView: View {
             .navigationTitle(role == .student ? "Appointments" : "Requests")
             .refreshable { await viewModel.load() }
             .task { await viewModel.load() }
+            .task { await viewModel.autoRefresh() }
             .overlay { placeholder }
+            .safeAreaInset(edge: .top) { errorBanner }
             .alert("Cancel Appointment?", isPresented: isConfirmingCancel, presenting: appointmentToCancel) { appointment in
                 Button("Cancel Appointment", role: .destructive) {
                     Task { await viewModel.cancel(appointment) }
@@ -68,11 +70,24 @@ struct AppointmentsView: View {
         }
     }
 
+    /// With rows on screen a failed action or refresh keeps them visible, under a message.
+    @ViewBuilder
+    private var errorBanner: some View {
+        if let error = viewModel.errorMessage, !viewModel.appointments.isEmpty {
+            Text(error)
+                .font(.footnote)
+                .foregroundStyle(.red)
+                .padding(8)
+                .frame(maxWidth: .infinity)
+                .background(.bar)
+        }
+    }
+
     @ViewBuilder
     private var placeholder: some View {
-        if let error = viewModel.errorMessage {
+        if let error = viewModel.errorMessage, viewModel.appointments.isEmpty {
             ContentUnavailableView("Could Not Load Appointments", systemImage: "wifi.exclamationmark", description: Text(error))
-        } else if viewModel.appointments.isEmpty && !viewModel.isLoading {
+        } else if viewModel.appointments.isEmpty && viewModel.hasLoaded {
             ContentUnavailableView(
                 role == .student ? "No Appointments" : "No Requests",
                 systemImage: "calendar",

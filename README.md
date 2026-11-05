@@ -13,6 +13,7 @@ It talks to a backend running locally and is not on the App Store.
 - List appointments and cancel one, with a confirmation first
 - Professors set their status with a note and a time they'll be back, and confirm or cancel requests. Confirming declines overlapping requests on the backend, and the list reloads to show that
 - Professors add and remove walk-in time for today
+- Availability and appointment lists refresh every 10 seconds while on screen, as the web app's dashboards do
 - Show the backend's own error message when it refuses a request
 
 ## How it is built
@@ -80,7 +81,7 @@ Not yet run: a physical device, iPad, dark mode, VoiceOver, pull to refresh, the
 
 Nothing in this section is built. The goal is full parity with the EduAccess web app:
 
-- Notifications and automatic availability refresh
+- Notifications
 
 ## Contributors
 
