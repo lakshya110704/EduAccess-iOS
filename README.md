@@ -1,8 +1,8 @@
 # EduAccess iOS
 
-A small SwiftUI client for the [EduAccess](https://github.com/lakshya110704/EduAccess) Django REST backend. A student logs in, checks a professor's availability, requests an appointment and cancels it. A professor logs in, sets their availability and confirms or cancels requests.
+A SwiftUI client for the [EduAccess](https://github.com/lakshya110704/EduAccess) Django REST backend. A student logs in, checks a professor's availability, requests an appointment and cancels it. A professor logs in, sets their availability and confirms or cancels requests.
 
-It talks to a backend running locally and is not on the App Store.
+It has been run against a local copy of the backend, over HTTP and over HTTPS. It is not on the App Store.
 
 ## Features
 
@@ -25,11 +25,12 @@ It talks to a backend running locally and is not on the App Store.
 
 ```
 EduAccess/
-  Models/       Professor, Appointment, AvailabilityStatus
-  Networking/   APIClient protocol, LiveAPIClient
-  ViewModels/   Login, Professors, Booking, Appointments
-  Views/        SwiftUI screens
-EduAccessTests/ View model tests and LiveAPIClient tests
+  Models/         Professor, Appointment, Me, OpenTime, UserRole, AvailabilityStatus
+  Networking/     APIClient protocol, LiveAPIClient
+  ViewModels/     Login, Professors, Booking, Appointments, ProfessorStatus, OpenTime
+  Views/          SwiftUI screens
+EduAccessTests/   View model tests with a mock, client tests, tests against a local backend
+EduAccessUITests/ Full flows through the real app against a local backend
 ```
 
 ## Run it
@@ -47,7 +48,13 @@ export DB_ENGINE=sqlite DJANGO_DEBUG=True
 
 `seed_demo` creates demo students and professors. Its password is in `api/management/commands/seed_demo.py` in the backend.
 
-Then open `EduAccess.xcodeproj` in Xcode and run the `EduAccess` scheme on an iOS 18 simulator. A new student has no saved professors, so search for one (for example `AB2` or `gupta`) and tap its star.
+Then open `EduAccess.xcodeproj` in Xcode and run the `EduAccess` scheme on an iOS 18 simulator. `seed_demo` creates accounts for both roles: `student1`, `student2`, `prof1` and `prof2`. A new student has no saved professors, so search for one (for example `AB2` or `gupta`) and tap its star.
+
+To use another backend, set the `API_BASE_URL` build setting in Xcode, or pass it on the command line:
+
+```bash
+xcodebuild build -project EduAccess.xcodeproj -scheme EduAccess -destination 'generic/platform=iOS Simulator' API_BASE_URL=https://your-host.example CODE_SIGNING_ALLOWED=NO
+```
 
 ## Tests
 
@@ -55,26 +62,41 @@ Then open `EduAccess.xcodeproj` in Xcode and run the `EduAccess` scheme on an iO
 xcodebuild test -project EduAccess.xcodeproj -scheme EduAccess -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.0' CODE_SIGNING_ALLOWED=NO
 ```
 
-Last run: 26 tests, 26 passed, 0 failed, on an iPhone 16 simulator with iOS 18.0 and Xcode 27.2. All of them use mocks or saved JSON, so they do not need the backend.
+With the seeded backend running, supply its demo password to also run the tests that use it. They refuse any host but `127.0.0.1`, so they cannot write to a deployed backend.
 
-## Checked by hand
+```bash
+TEST_RUNNER_EDUACCESS_TEST_PASSWORD=<seed_demo password> xcodebuild test -project EduAccess.xcodeproj -scheme EduAccess -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.0' CODE_SIGNING_ALLOWED=NO
+```
 
-Run once on the same simulator against a local copy of the backend with its seed data, confirmed in the backend's request log:
+Last runs, on an iPhone 16 simulator with iOS 18.0 and Xcode 27.2:
 
-- Wrong password: `401`, and the app shows an error
-- Correct password: `302`, and the app opens the professors screen
-- Search: `200`, and the professor's status and cabin appear
-- Request an appointment: `201`, and it appears as Pending
-- Cancel it: `200`, and it shows as Cancelled, which the backend database also shows
-- Log out: `302`, and the app returns to login
+| Run | Passed | Failed | Skipped |
+|---|---|---|---|
+| Fresh clone, no password | 61 | 0 | 9 |
+| Local backend over HTTP | 70 | 0 | 0 |
+| Local backend in production mode behind a local TLS proxy, over HTTPS | 70 | 0 | 0 |
 
-Not yet run: a physical device, iPad, dark mode, VoiceOver, pull to refresh, the app's behavior with the backend offline, logging in with a professor account, and any HTTPS or deployed backend.
+The 9 skipped tests are the 7 that call the local backend directly and the 2 UI flows. The UI flows cover a student searching, saving a professor and requesting an appointment, then a professor setting a status note, confirming and cancelling that request.
+
+These UI flows needed retries for dropped taps while the machine was under heavy load. Those retries are in the test code.
+
+## Checked directly
+
+Against the same local backend:
+
+- A wrong password, or an account used under the wrong role, shows an error in the app
+- With the app left open, the backend log showed a request every 10 to 11 seconds for the visible tab only, and none after logout
+- Over HTTPS with production settings, session and CSRF cookies were `Secure`. Writes without a `Referer` got `403` and writes with one succeeded
+- Cabin directions page: `200` with `curl`
+
+Deployed backend: only a read-only check that `/healthz/` returns `200` with a valid certificate. Logging in and any writes there are not yet run.
+
+Not yet run: a physical device, iPad, dark mode, VoiceOver, pull to refresh, tapping the directions and set-cabin links, the app with the backend offline, and a professor without a cabin in the UI.
 
 ## Limitations
 
-- The backend address is a constant in `LiveAPIClient.swift`, and only plain HTTP to a local server is allowed. A deployed HTTPS backend would also need a `Referer` header, which Django requires for CSRF over HTTPS
+- Plain HTTP only works for local addresses. Anything else needs HTTPS
 - The backend has no JSON login endpoint, so the app posts its HTML login form
-- No notifications, although the backend supports them
 - Professors set their cabin on the web app, because the backend has no API for it. A professor without a cabin can log in, but the backend refuses any change until the cabin is set
 
 ## Roadmap
@@ -82,6 +104,9 @@ Not yet run: a physical device, iPad, dark mode, VoiceOver, pull to refresh, the
 Nothing in this section is built. The goal is full parity with the EduAccess web app:
 
 - Notifications
+- Students edit the reason for a request while it is pending
+- Sign up in the app. Today that is on the web app only
+- Professors set their cabin in the app. This needs an API the backend does not have yet
 
 ## Contributors
 
