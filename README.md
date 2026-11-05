@@ -75,4 +75,4 @@ Not yet run: a physical device, iPad, dark mode, VoiceOver, pull to refresh, the
 
 ## License
 
-Not yet chosen. The backend repository is MIT licensed.
+MIT. See [LICENSE](LICENSE).
