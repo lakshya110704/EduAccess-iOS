@@ -8,7 +8,7 @@ struct LiveAPIClient: APIClient {
 
     /// The backend has no JSON login, only Django's session login form, so this fetches the
     /// CSRF cookie and posts the form the same way the web frontend does.
-    func login(username: String, password: String) async throws {
+    func login(username: String, password: String, role: UserRole) async throws {
         _ = try await session.data(from: url("login/"))
 
         var request = URLRequest(url: url("login/"))
@@ -16,17 +16,17 @@ struct LiveAPIClient: APIClient {
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         request.httpBody = Self.formBody([
             "csrfmiddlewaretoken": csrfToken ?? "",
-            "role": "student",
+            "role": role.rawValue,
             "username": username,
             "password": password,
         ])
         let (body, response) = try await session.data(for: request)
 
-        // Success redirects to the student page, which URLSession follows to a 200.
+        // Success redirects to the role's dashboard page, which URLSession follows to a 200.
         switch (response as? HTTPURLResponse)?.statusCode {
         case 200: return
         case 401: throw APIError.invalidCredentials
-        case 403: throw APIError.notAStudentAccount
+        case 403: throw APIError.roleMismatch
         default: throw APIError.server(body: body)
         }
     }

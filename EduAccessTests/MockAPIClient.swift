@@ -9,15 +9,15 @@ final class MockAPIClient: APIClient {
     var bookError: Error?
     var cancelResult: Result<Appointment, Error>?
 
-    private(set) var loginCalls: [(username: String, password: String)] = []
+    private(set) var loginCalls: [(username: String, password: String, role: UserRole)] = []
     private(set) var logoutCount = 0
     private(set) var myProfessorsCount = 0
     private(set) var searches: [String] = []
     private(set) var bookings: [(professorID: Int, time: Date, topic: Appointment.Topic)] = []
     private(set) var cancelledIDs: [Int] = []
 
-    func login(username: String, password: String) async throws {
-        loginCalls.append((username, password))
+    func login(username: String, password: String, role: UserRole) async throws {
+        loginCalls.append((username, password, role))
         if let loginError { throw loginError }
     }
 

@@ -29,7 +29,7 @@ final class LoginViewModelTests: XCTestCase {
 
         XCTAssertEqual(api.loginCalls.first?.username, "student1")
         XCTAssertEqual(api.loginCalls.first?.password, " pass word ")
-        XCTAssertTrue(viewModel.isLoggedIn)
+        XCTAssertEqual(viewModel.loggedInRole, .student)
         XCTAssertEqual(viewModel.password, "")
         XCTAssertNil(viewModel.errorMessage)
     }
@@ -43,7 +43,7 @@ final class LoginViewModelTests: XCTestCase {
 
         await viewModel.login()
 
-        XCTAssertFalse(viewModel.isLoggedIn)
+        XCTAssertNil(viewModel.loggedInRole)
         XCTAssertEqual(viewModel.errorMessage, "Incorrect username or password.")
         XCTAssertFalse(viewModel.isLoading)
     }
@@ -58,6 +58,19 @@ final class LoginViewModelTests: XCTestCase {
         await viewModel.logout()
 
         XCTAssertEqual(api.logoutCount, 1)
-        XCTAssertFalse(viewModel.isLoggedIn)
+        XCTAssertNil(viewModel.loggedInRole)
+    }
+
+    func testSelectedRoleIsSentAndRemembered() async {
+        let api = MockAPIClient()
+        let viewModel = LoginViewModel(api: api)
+        viewModel.username = "prof1"
+        viewModel.password = "secret"
+        viewModel.role = .professor
+
+        await viewModel.login()
+
+        XCTAssertEqual(api.loginCalls.first?.role, .professor)
+        XCTAssertEqual(viewModel.loggedInRole, .professor)
     }
 }

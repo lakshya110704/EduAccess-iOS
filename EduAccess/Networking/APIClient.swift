@@ -1,7 +1,7 @@
 import Foundation
 
 protocol APIClient: Sendable {
-    func login(username: String, password: String) async throws
+    func login(username: String, password: String, role: UserRole) async throws
     func logout() async throws
     func myProfessors() async throws -> [Professor]
     func searchProfessors(_ query: String) async throws -> [Professor]
@@ -12,13 +12,13 @@ protocol APIClient: Sendable {
 
 enum APIError: LocalizedError, Equatable {
     case invalidCredentials
-    case notAStudentAccount
+    case roleMismatch
     case server(String)
 
     var errorDescription: String? {
         switch self {
         case .invalidCredentials: "Incorrect username or password."
-        case .notAStudentAccount: "This is not an active student account."
+        case .roleMismatch: "This account does not match the selected role, or is not active yet."
         case .server(let message): message
         }
     }

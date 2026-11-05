@@ -21,15 +21,22 @@ private struct RootView: View {
     }
 
     var body: some View {
-        if login.isLoggedIn {
+        switch login.loggedInRole {
+        case .student:
             TabView {
-                ProfessorsView(api: api, onLogout: { Task { await login.logout() } })
+                ProfessorsView(api: api, onLogout: logout)
                     .tabItem { Label("Professors", systemImage: "person.2") }
                 AppointmentsView(api: api)
                     .tabItem { Label("Appointments", systemImage: "calendar") }
             }
-        } else {
+        case .professor:
+            ProfessorHomeView(api: api, onLogout: logout)
+        case nil:
             LoginView(viewModel: login)
         }
+    }
+
+    private func logout() {
+        Task { await login.logout() }
     }
 }

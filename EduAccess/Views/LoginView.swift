@@ -11,9 +11,10 @@ struct LoginView: View {
                     .scaledToFit()
                     .frame(height: 96)
                     .accessibilityLabel("EduAccess")
-                Text("Sign in with your student account")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                Picker("Role", selection: $viewModel.role) {
+                    ForEach(UserRole.allCases) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.segmented)
 
                 TextField("Username", text: $viewModel.username)
                     .textContentType(.username)

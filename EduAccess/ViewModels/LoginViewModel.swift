@@ -6,7 +6,8 @@ import Observation
 final class LoginViewModel {
     var username = ""
     var password = ""
-    private(set) var isLoggedIn = false
+    var role = UserRole.student
+    private(set) var loggedInRole: UserRole?
     private(set) var isLoading = false
     private(set) var errorMessage: String?
 
@@ -25,10 +26,10 @@ final class LoginViewModel {
         isLoading = true
         defer { isLoading = false }
         do {
-            try await api.login(username: username.trimmingCharacters(in: .whitespaces), password: password)
+            try await api.login(username: username.trimmingCharacters(in: .whitespaces), password: password, role: role)
             password = ""
             errorMessage = nil
-            isLoggedIn = true
+            loggedInRole = role
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -37,6 +38,6 @@ final class LoginViewModel {
     func logout() async {
         // Back to the login screen even if the request fails: logging in again replaces the session.
         try? await api.logout()
-        isLoggedIn = false
+        loggedInRole = nil
     }
 }

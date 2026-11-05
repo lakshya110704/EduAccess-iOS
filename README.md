@@ -2,11 +2,11 @@
 
 A small SwiftUI client for the [EduAccess](https://github.com/lakshya110704/EduAccess) Django REST backend. A student logs in, checks a professor's availability, requests an appointment and cancels it.
 
-Student accounts only. It talks to a backend running locally and is not on the App Store.
+It talks to a backend running locally and is not on the App Store.
 
 ## Features
 
-- Log in with the backend's session login (CSRF cookie plus form post), and log out
+- Log in as a student or professor with the backend's session login (CSRF cookie plus form post), and log out
 - List the student's saved professors, or search all professors, with live status (Free, Busy, Unavailable) and cabin
 - Request an appointment with a time and a reason. Times round up to the quarter hour, as the backend requires
 - List appointments and cancel one, with a confirmation first
