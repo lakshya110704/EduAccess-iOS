@@ -37,6 +37,21 @@ final class ProfessorsViewModel {
             errorMessage = error.localizedDescription
         }
     }
+
+    /// In the saved list an unsaved professor leaves the list. In search results they stay, with the new state.
+    func toggleSaved(_ professor: Professor) async {
+        do {
+            let updated = try await api.setSaved(!professor.isMine, professorID: professor.id)
+            if !isSearching && !updated.isMine {
+                professors.removeAll { $0.id == updated.id }
+            } else if let index = professors.firstIndex(where: { $0.id == updated.id }) {
+                professors[index] = updated
+            }
+            errorMessage = nil
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
 }
 
 extension Error {

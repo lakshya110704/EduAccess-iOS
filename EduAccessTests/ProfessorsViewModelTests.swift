@@ -60,6 +60,56 @@ final class ProfessorsViewModelTests: XCTestCase {
         XCTAssertNil(viewModel.errorMessage)
     }
 
+    func testUnsavingInTheSavedListRemovesTheRow() async {
+        let api = MockAPIClient()
+        api.professorsResult = .success([.sample(isMine: true)])
+        let viewModel = ProfessorsViewModel(api: api)
+        await viewModel.load()
+
+        await viewModel.toggleSaved(.sample(isMine: true))
+
+        XCTAssertEqual(api.savedCalls.first?.saved, false)
+        XCTAssertTrue(viewModel.professors.isEmpty)
+    }
+
+    func testSavingInSearchResultsKeepsTheRowWithNewState() async {
+        let api = MockAPIClient()
+        api.professorsResult = .success([.sample(isMine: false)])
+        let viewModel = ProfessorsViewModel(api: api)
+        viewModel.query = "gu"
+        await viewModel.load()
+
+        await viewModel.toggleSaved(.sample(isMine: false))
+
+        XCTAssertEqual(api.savedCalls.first?.saved, true)
+        XCTAssertEqual(viewModel.professors.map(\.isMine), [true])
+    }
+
+    func testUnsavingInSearchResultsKeepsTheRow() async {
+        let api = MockAPIClient()
+        api.professorsResult = .success([.sample(isMine: true)])
+        let viewModel = ProfessorsViewModel(api: api)
+        viewModel.query = "gu"
+        await viewModel.load()
+
+        await viewModel.toggleSaved(.sample(isMine: true))
+
+        XCTAssertEqual(viewModel.professors.map(\.isMine), [false])
+    }
+
+    func testSaveFailureLeavesTheListAndShowsTheError() async {
+        let api = MockAPIClient()
+        api.professorsResult = .success([.sample(isMine: true)])
+        api.saveError = APIError.server("Only students have a list.")
+        let viewModel = ProfessorsViewModel(api: api)
+        await viewModel.load()
+
+        await viewModel.toggleSaved(.sample(isMine: true))
+
+        XCTAssertEqual(viewModel.professors.count, 1)
+        XCTAssertEqual(viewModel.errorMessage, "Only students have a list.")
+    }
+
     func testSuccessClearsAnEarlierError() async {
         let api = MockAPIClient()
         api.professorsResult = .failure(APIError.server("Server down"))

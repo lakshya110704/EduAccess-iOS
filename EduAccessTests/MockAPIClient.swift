@@ -11,12 +11,19 @@ final class MockAPIClient: APIClient {
     var confirmError: Error?
     var meResult: Result<Me, Error> = .success(.sample)
     var updateError: Error?
+    var saveError: Error?
+    var openTimesResult: Result<[OpenTime], Error> = .success([])
+    var addOpenTimeError: Error?
+    var deleteOpenTimeError: Error?
 
     private(set) var loginCalls: [(username: String, password: String, role: UserRole)] = []
     private(set) var logoutCount = 0
     private(set) var myProfessorsCount = 0
     private(set) var searches: [String] = []
-    private(set) var bookings: [(professorID: Int, time: Date, topic: Appointment.Topic)] = []
+    private(set) var bookings: [BookingRequest] = []
+    private(set) var savedCalls: [(saved: Bool, professorID: Int)] = []
+    private(set) var addedOpenTimes: [(start: Date, end: Date)] = []
+    private(set) var deletedOpenTimeIDs: [Int] = []
     private(set) var cancelledIDs: [Int] = []
     private(set) var confirmedIDs: [Int] = []
     private(set) var updates: [AvailabilityUpdate] = []
@@ -44,8 +51,8 @@ final class MockAPIClient: APIClient {
         try appointmentsResult.get()
     }
 
-    func book(professorID: Int, at time: Date, topic: Appointment.Topic) async throws -> Appointment {
-        bookings.append((professorID, time, topic))
+    func book(_ request: BookingRequest) async throws -> Appointment {
+        bookings.append(request)
         if let bookError { throw bookError }
         return Appointment.sample(id: 1, status: .pending)
     }
@@ -59,6 +66,27 @@ final class MockAPIClient: APIClient {
         confirmedIDs.append(appointmentID)
         if let confirmError { throw confirmError }
         return Appointment.sample(id: appointmentID, status: .confirmed)
+    }
+
+    func setSaved(_ saved: Bool, professorID: Int) async throws -> Professor {
+        savedCalls.append((saved, professorID))
+        if let saveError { throw saveError }
+        return Professor.sample(isMine: saved)
+    }
+
+    func openTimes() async throws -> [OpenTime] {
+        try openTimesResult.get()
+    }
+
+    func addOpenTime(start: Date, end: Date) async throws -> OpenTime {
+        addedOpenTimes.append((start, end))
+        if let addOpenTimeError { throw addOpenTimeError }
+        return OpenTime(id: 9, start: start, end: end)
+    }
+
+    func deleteOpenTime(id: Int) async throws {
+        deletedOpenTimeIDs.append(id)
+        if let deleteOpenTimeError { throw deleteOpenTimeError }
     }
 
     func me() async throws -> Me {
@@ -82,7 +110,20 @@ final class MockAPIClient: APIClient {
 }
 
 extension Professor {
-    static let sample = Professor(id: 3, displayName: "Ashish Gupta", availabilityStatus: .free, cabinLabel: "AB2 FB3 : 106")
+    static let sample = sample(isMine: false)
+
+    static func sample(isMine: Bool, status: AvailabilityStatus = .free, note: StatusNote? = nil, openToday: [OpenWindow] = []) -> Professor {
+        Professor(
+            id: 3,
+            displayName: "Ashish Gupta",
+            availabilityStatus: status,
+            statusNote: note,
+            cabinLabel: "AB2 FB3 : 106",
+            directionsUrl: "/go/AB2/FB3/106/",
+            isMine: isMine,
+            openToday: openToday
+        )
+    }
 }
 
 extension Me {

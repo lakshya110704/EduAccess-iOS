@@ -6,9 +6,13 @@ protocol APIClient: Sendable {
     func myProfessors() async throws -> [Professor]
     func searchProfessors(_ query: String) async throws -> [Professor]
     func appointments() async throws -> [Appointment]
-    func book(professorID: Int, at time: Date, topic: Appointment.Topic) async throws -> Appointment
+    func book(_ request: BookingRequest) async throws -> Appointment
     func cancel(appointmentID: Int) async throws -> Appointment
     func confirm(appointmentID: Int) async throws -> Appointment
+    func setSaved(_ saved: Bool, professorID: Int) async throws -> Professor
+    func openTimes() async throws -> [OpenTime]
+    func addOpenTime(start: Date, end: Date) async throws -> OpenTime
+    func deleteOpenTime(id: Int) async throws
     func me() async throws -> Me
     func updateAvailability(_ update: AvailabilityUpdate) async throws -> Me
     /// A page of the web app, for the things only it can do.

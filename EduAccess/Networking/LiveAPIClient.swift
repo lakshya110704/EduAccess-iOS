@@ -32,10 +32,7 @@ struct LiveAPIClient: APIClient {
     }
 
     func logout() async throws {
-        var request = URLRequest(url: url("logout/"))
-        request.httpMethod = "POST"
-        request.setValue(csrfToken, forHTTPHeaderField: "X-CSRFToken")
-        _ = try await session.data(for: request)
+        _ = try await session.data(for: bodylessWrite("POST", url("logout/")))
     }
 
     func myProfessors() async throws -> [Professor] {
@@ -51,13 +48,31 @@ struct LiveAPIClient: APIClient {
         try await send(URLRequest(url: url("api/appointments/")))
     }
 
-    func book(professorID: Int, at time: Date, topic: Appointment.Topic) async throws -> Appointment {
+    func book(_ request: BookingRequest) async throws -> Appointment {
+        try await send(write("POST", url("api/appointments/"), request))
+    }
+
+    func setSaved(_ saved: Bool, professorID: Int) async throws -> Professor {
+        try await send(bodylessWrite(saved ? "POST" : "DELETE", url("api/professors/\(professorID)/mine/")))
+    }
+
+    func openTimes() async throws -> [OpenTime] {
+        try await send(URLRequest(url: url("api/open-times/")))
+    }
+
+    func addOpenTime(start: Date, end: Date) async throws -> OpenTime {
         struct Body: Encodable {
-            let professor: Int
-            let appointmentTime: Date
-            let topic: Appointment.Topic
+            let start: Date
+            let end: Date
         }
-        return try await send(write("POST", url("api/appointments/"), Body(professor: professorID, appointmentTime: time, topic: topic)))
+        return try await send(write("POST", url("api/open-times/"), Body(start: start, end: end)))
+    }
+
+    func deleteOpenTime(id: Int) async throws {
+        let (body, response) = try await session.data(for: bodylessWrite("DELETE", url("api/open-times/\(id)/")))
+        guard let status = (response as? HTTPURLResponse)?.statusCode, 200..<300 ~= status else {
+            throw APIError.server(body: body)
+        }
     }
 
     func cancel(appointmentID: Int) async throws -> Appointment {
@@ -126,11 +141,16 @@ struct LiveAPIClient: APIClient {
         URL(string: "\(baseURL.absoluteString)/\(path)")!
     }
 
-    private func write(_ method: String, _ url: URL, _ body: some Encodable) throws -> URLRequest {
+    private func bodylessWrite(_ method: String, _ url: URL) -> URLRequest {
         var request = URLRequest(url: url)
         request.httpMethod = method
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(csrfToken, forHTTPHeaderField: "X-CSRFToken")
+        return request
+    }
+
+    private func write(_ method: String, _ url: URL, _ body: some Encodable) throws -> URLRequest {
+        var request = bodylessWrite(method, url)
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try Self.encoder.encode(body)
         return request
     }

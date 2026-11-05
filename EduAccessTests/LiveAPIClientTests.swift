@@ -8,7 +8,31 @@ final class LiveAPIClientTests: XCTestCase {
 
         let professors = try LiveAPIClient.decoder.decode([Professor].self, from: Data(json.utf8))
 
-        XCTAssertEqual(professors, [Professor(id: 3, displayName: "Ashish Gupta", availabilityStatus: .free, cabinLabel: "AB2 FB3 : 106")])
+        XCTAssertEqual(professors, [.sample(isMine: false)])
+    }
+
+    func testDecodesProfessorWithNoteAndWalkInWindow() throws {
+        let json = #"{"id":3,"username":"prof1","display_name":"Ashish Gupta","availability_status":"Busy","status_note":{"pick":"Lunch","text":"","until":null},"cabin_label":"AB2 FB3 : 106","directions_url":"/go/AB2/FB3/106/","is_mine":true,"open_today":[{"start":"2026-11-07T10:00:00+05:30","end":"2026-11-07T10:30:00+05:30"}]}"#
+
+        let professor = try LiveAPIClient.decoder.decode(Professor.self, from: Data(json.utf8))
+
+        XCTAssertTrue(professor.isMine)
+        XCTAssertEqual(professor.directionsUrl, "/go/AB2/FB3/106/")
+        XCTAssertEqual(professor.noteSummary, "Lunch")
+        XCTAssertEqual(professor.openToday.count, 1)
+        XCTAssertNotNil(professor.openTodaySummary)
+    }
+
+    func testBookingBodyUsesBackendFieldNames() throws {
+        let request = BookingRequest(professor: 3, appointmentTime: Date(timeIntervalSince1970: 0), slots: 2, topic: .marks, details: "Chapter 3")
+
+        let data = try LiveAPIClient.encoder.encode(request)
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+        XCTAssertEqual(json["appointment_time"] as? String, "1970-01-01T00:00:00Z")
+        XCTAssertEqual(json["slots"] as? Int, 2)
+        XCTAssertEqual(json["topic"] as? String, "Marks")
+        XCTAssertEqual(json["details"] as? String, "Chapter 3")
     }
 
     func testDecodesAppointmentWithTimeZoneOffset() throws {

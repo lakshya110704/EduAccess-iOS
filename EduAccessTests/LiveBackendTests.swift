@@ -54,8 +54,9 @@ final class LiveBackendTests: XCTestCase {
         let professorID = try await student1.searchProfessors("Iyer")[0].id
         let time = randomFutureSlot()
 
-        let first = try await student1.book(professorID: professorID, at: time, topic: .doubt)
-        let second = try await student2.book(professorID: professorID, at: time, topic: .marks)
+        let first = try await student1.book(BookingRequest(professor: professorID, appointmentTime: time, slots: 2, topic: .doubt, details: "Chapter 3"))
+        let second = try await student2.book(BookingRequest(professor: professorID, appointmentTime: time, slots: 1, topic: .marks, details: ""))
+        XCTAssertEqual(first.details, "Chapter 3")
         XCTAssertEqual(first.status, .pending)
 
         let confirmed = try await professor.confirm(appointmentID: first.id)
@@ -66,6 +67,39 @@ final class LiveBackendTests: XCTestCase {
 
         let cancelled = try await professor.cancel(appointmentID: first.id)
         XCTAssertEqual(cancelled.status, .cancelled)
+    }
+
+    func testStudentSavesAndUnsavesAProfessor() async throws {
+        let student = try await loggedIn("student2", as: .student)
+        let professor = try await student.searchProfessors("Gupta")[0]
+
+        let saved = try await student.setSaved(true, professorID: professor.id)
+        XCTAssertTrue(saved.isMine)
+        var list = try await student.myProfessors()
+        XCTAssertTrue(list.contains { $0.id == professor.id })
+
+        let unsaved = try await student.setSaved(false, professorID: professor.id)
+        XCTAssertFalse(unsaved.isMine)
+        list = try await student.myProfessors()
+        XCTAssertFalse(list.contains { $0.id == professor.id })
+    }
+
+    func testWalkInWindowReachesStudentsAndCanBeRemoved() async throws {
+        let professor = try await loggedIn("prof2", as: .professor)
+        let student = try await loggedIn("student2", as: .student)
+
+        // Late today, so it stays within "today" and clear of other windows from earlier runs.
+        let calendar = Calendar(identifier: .gregorian)
+        var kolkata = calendar
+        kolkata.timeZone = TimeZone(identifier: "Asia/Kolkata")!
+        let start = kolkata.date(bySettingHour: 23, minute: 0, second: 0, of: Date())!
+        let window = try await professor.addOpenTime(start: start, end: start.addingTimeInterval(30 * 60))
+        var seen = try await student.searchProfessors("Iyer")[0]
+        XCTAssertTrue(seen.openToday.contains { $0.start == start })
+
+        try await professor.deleteOpenTime(id: window.id)
+        seen = try await student.searchProfessors("Iyer")[0]
+        XCTAssertFalse(seen.openToday.contains { $0.start == start })
     }
 
     func testAccountsAreRefusedUnderTheWrongRole() async throws {

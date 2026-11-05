@@ -7,6 +7,8 @@ final class BookingViewModel {
     let professor: Professor
     var date = Date()
     var topic = Appointment.Topic.doubt
+    var slots = 1
+    var details = ""
     private(set) var isBooking = false
     private(set) var didBook = false
     private(set) var errorMessage: String?
@@ -33,7 +35,13 @@ final class BookingViewModel {
         isBooking = true
         defer { isBooking = false }
         do {
-            _ = try await api.book(professorID: professor.id, at: slotStart, topic: topic)
+            _ = try await api.book(BookingRequest(
+                professor: professor.id,
+                appointmentTime: slotStart,
+                slots: slots,
+                topic: topic,
+                details: details.trimmingCharacters(in: .whitespacesAndNewlines)
+            ))
             errorMessage = nil
             didBook = true
         } catch {

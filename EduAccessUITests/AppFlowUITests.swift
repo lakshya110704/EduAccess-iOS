@@ -45,6 +45,10 @@ final class AppFlowUITests: XCTestCase {
         XCTAssertTrue(tab.isSelected, "Tab \(name) did not open")
     }
 
+    private func text(containing fragment: String) -> XCUIElement {
+        app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", fragment)).firstMatch
+    }
+
     private func waitForText(containing fragment: String) {
         let element = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", fragment)).firstMatch
         XCTAssertTrue(element.waitForExistence(timeout: timeout), "No text containing \(fragment)")
@@ -57,10 +61,16 @@ final class AppFlowUITests: XCTestCase {
         search.tap()
         search.typeText("AB2")
         waitForText(containing: "Ashish Gupta")
+        XCTAssertTrue(app.buttons["Save Ashish Gupta"].waitForExistence(timeout: timeout))
+        app.buttons["Save Ashish Gupta"].tap()
+        XCTAssertTrue(app.buttons["Remove Ashish Gupta from saved"].waitForExistence(timeout: timeout))
         attachScreenshot("student-search")
+        app.buttons["Remove Ashish Gupta from saved"].tap()
+        XCTAssertTrue(app.buttons["Save Ashish Gupta"].waitForExistence(timeout: timeout))
 
-        app.cells.firstMatch.tap()
+        text(containing: "Ashish Gupta").tap()
         XCTAssertTrue(app.buttons["Request Appointment"].waitForExistence(timeout: timeout))
+        XCTAssertTrue(app.links["Directions to Cabin"].exists || app.buttons["Directions to Cabin"].exists)
         attachScreenshot("student-booking")
         app.buttons["Request Appointment"].tap()
         XCTAssertTrue(app.alerts["Request Sent"].waitForExistence(timeout: timeout))
@@ -72,7 +82,10 @@ final class AppFlowUITests: XCTestCase {
         attachScreenshot("student-appointments")
 
         openTab("Professors")
-        if app.buttons["Cancel"].exists { app.buttons["Cancel"].tap() }
+        // Log Out is hidden while the search bar is active.
+        for _ in 0..<6 where !app.buttons["Log Out"].waitForExistence(timeout: 5) {
+            if app.buttons["Cancel"].exists { app.buttons["Cancel"].tap() }
+        }
         XCTAssertTrue(app.buttons["Log Out"].waitForExistence(timeout: timeout))
         app.buttons["Log Out"].tap()
 
@@ -89,7 +102,11 @@ final class AppFlowUITests: XCTestCase {
         openTab("Requests")
         waitForText(containing: "Riya Sharma")
         attachScreenshot("professor-requests")
-        app.buttons["Confirm"].firstMatch.tap()
+        // A tap can be dropped while a tab is still settling, so retry until the row changes.
+        for _ in 0..<4 where !text(containing: "· Confirmed").exists {
+            app.buttons["Confirm"].firstMatch.tap()
+            _ = text(containing: "· Confirmed").waitForExistence(timeout: 15)
+        }
         waitForText(containing: "· Confirmed")
         attachScreenshot("professor-confirmed")
 
@@ -100,6 +117,10 @@ final class AppFlowUITests: XCTestCase {
         let confirmed = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "· Confirmed")).firstMatch
         expectation(for: confirmedGone, evaluatedWith: confirmed)
         waitForExpectations(timeout: timeout)
+
+        openTab("Walk-In")
+        XCTAssertTrue(app.buttons["Add Walk-In Time"].waitForExistence(timeout: timeout))
+        attachScreenshot("professor-walk-in")
 
         openTab("My Status")
         app.buttons["Free"].tap()

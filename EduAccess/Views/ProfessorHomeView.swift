@@ -10,6 +10,8 @@ struct ProfessorHomeView: View {
                 .tabItem { Label("My Status", systemImage: "person.crop.circle") }
             AppointmentsView(api: api, role: .professor)
                 .tabItem { Label("Requests", systemImage: "calendar") }
+            OpenTimeView(api: api)
+                .tabItem { Label("Walk-In", systemImage: "door.left.hand.open") }
         }
     }
 }

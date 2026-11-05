@@ -15,7 +15,9 @@ struct ProfessorsView: View {
         NavigationStack {
             List(viewModel.professors) { professor in
                 NavigationLink(value: professor) {
-                    ProfessorRow(professor: professor)
+                    ProfessorRow(professor: professor) {
+                        Task { await viewModel.toggleSaved(professor) }
+                    }
                 }
             }
             .navigationTitle("Professors")
@@ -51,7 +53,7 @@ struct ProfessorsView: View {
                 ContentUnavailableView(
                     "No Saved Professors",
                     systemImage: "magnifyingglass",
-                    description: Text("Search above to find a professor and see their availability.")
+                    description: Text("Search above to find a professor, then tap the star to save them here.")
                 )
             }
         }
@@ -60,8 +62,21 @@ struct ProfessorsView: View {
 
 private struct ProfessorRow: View {
     let professor: Professor
+    let onToggleSaved: () -> Void
 
     var body: some View {
+        HStack {
+            details
+            Spacer()
+            Button(action: onToggleSaved) {
+                Image(systemName: professor.isMine ? "star.fill" : "star")
+            }
+            .buttonStyle(.borderless)
+            .accessibilityLabel(professor.isMine ? "Remove \(professor.displayName) from saved" : "Save \(professor.displayName)")
+        }
+    }
+
+    private var details: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(professor.displayName)
                 .font(.headline)
@@ -78,6 +93,16 @@ private struct ProfessorRow: View {
             }
             .font(.subheadline)
             .foregroundStyle(.secondary)
+            if let note = professor.noteSummary {
+                Text(note)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+            if let open = professor.openTodaySummary {
+                Text(open)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
         }
         .accessibilityElement(children: .combine)
     }
