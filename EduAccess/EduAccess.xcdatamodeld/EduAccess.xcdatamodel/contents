@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="1" systemVersion="11A491" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="false" userDefinedModelVersionIdentifier="">
+    <entity name="Professor" representedClassName="Professor" syncable="YES" codeGenerationType="class">
+        <attribute name="availability" optional="NO" attributeType="String" defaultValueString=""/>
+        <attribute name="department" optional="NO" attributeType="String" defaultValueString=""/>
+        <attribute name="id" optional="NO" attributeType="UUID"/>
+        <attribute name="name" optional="NO" attributeType="String" defaultValueString=""/>
+        <attribute name="statusRaw" optional="NO" attributeType="String" defaultValueString="Unavailable"/>
+    </entity>
+    <elements>
+        <element name="Professor" positionX="-63" positionY="-18" width="128" height="104"/>
+    </elements>
+</model>
