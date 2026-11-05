@@ -73,6 +73,14 @@ Not yet run: a physical device, iPad, dark mode, VoiceOver, pull to refresh, the
 - Students cannot add or remove saved professors in the app. That is done on the web app
 - No professor screens, notifications, walk-in hours, status notes or 30-minute bookings, although the backend supports them
 
+## Roadmap
+
+Nothing in this section is built. The goal is full parity with the EduAccess web app, including the professor side:
+
+- Professors log in, set their availability and status notes, and confirm or cancel requests
+- Students save professors, see walk-in hours and open cabin directions
+- Notifications and automatic availability refresh
+
 ## Contributors
 
 - Lakshya Mehta
