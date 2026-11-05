@@ -73,6 +73,11 @@ Not yet run: a physical device, iPad, dark mode, VoiceOver, pull to refresh, the
 - Students cannot add or remove saved professors in the app. That is done on the web app
 - No professor screens, notifications, walk-in hours, status notes or 30-minute bookings, although the backend supports them
 
+## Contributors
+
+- Lakshya Mehta
+- Mohini
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
