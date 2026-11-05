@@ -9,9 +9,9 @@ struct LiveAPIClient: APIClient {
     /// The backend has no JSON login, only Django's session login form, so this fetches the
     /// CSRF cookie and posts the form the same way the web frontend does.
     func login(username: String, password: String) async throws {
-        _ = try await session.data(from: baseURL.appending(path: "login/"))
+        _ = try await session.data(from: url("login/"))
 
-        var request = URLRequest(url: baseURL.appending(path: "login/"))
+        var request = URLRequest(url: url("login/"))
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         request.httpBody = Self.formBody([
@@ -32,23 +32,23 @@ struct LiveAPIClient: APIClient {
     }
 
     func logout() async throws {
-        var request = URLRequest(url: baseURL.appending(path: "logout/"))
+        var request = URLRequest(url: url("logout/"))
         request.httpMethod = "POST"
         request.setValue(csrfToken, forHTTPHeaderField: "X-CSRFToken")
         _ = try await session.data(for: request)
     }
 
     func myProfessors() async throws -> [Professor] {
-        try await send(URLRequest(url: apiURL("professors/")))
+        try await send(URLRequest(url: url("api/professors/")))
     }
 
     func searchProfessors(_ query: String) async throws -> [Professor] {
-        let url = apiURL("professors/").appending(queryItems: [URLQueryItem(name: "search", value: query)])
+        let url = url("api/professors/").appending(queryItems: [URLQueryItem(name: "search", value: query)])
         return try await send(URLRequest(url: url))
     }
 
     func appointments() async throws -> [Appointment] {
-        try await send(URLRequest(url: apiURL("appointments/")))
+        try await send(URLRequest(url: url("api/appointments/")))
     }
 
     func book(professorID: Int, at time: Date, topic: Appointment.Topic) async throws -> Appointment {
@@ -57,12 +57,12 @@ struct LiveAPIClient: APIClient {
             let appointmentTime: Date
             let topic: Appointment.Topic
         }
-        return try await send(write("POST", apiURL("appointments/"), Body(professor: professorID, appointmentTime: time, topic: topic)))
+        return try await send(write("POST", url("api/appointments/"), Body(professor: professorID, appointmentTime: time, topic: topic)))
     }
 
     func cancel(appointmentID: Int) async throws -> Appointment {
         struct Body: Encodable { let status: Appointment.Status }
-        return try await send(write("PATCH", apiURL("appointments/\(appointmentID)/"), Body(status: .cancelled)))
+        return try await send(write("PATCH", url("api/appointments/\(appointmentID)/"), Body(status: .cancelled)))
     }
 
     // MARK: - Helpers
@@ -94,8 +94,10 @@ struct LiveAPIClient: APIClient {
         session.configuration.httpCookieStorage?.cookies(for: baseURL)?.first { $0.name == "csrftoken" }?.value
     }
 
-    private func apiURL(_ path: String) -> URL {
-        baseURL.appending(path: "api/\(path)")
+    /// Built from the string because `URL.appending(path:)` turned "login/" into "/login//" on iOS 18.0,
+    /// and Django's routes need exactly one trailing slash.
+    func url(_ path: String) -> URL {
+        URL(string: "\(baseURL.absoluteString)/\(path)")!
     }
 
     private func write(_ method: String, _ url: URL, _ body: some Encodable) throws -> URLRequest {
