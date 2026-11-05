@@ -26,7 +26,7 @@ private struct RootView: View {
             TabView {
                 ProfessorsView(api: api, onLogout: logout)
                     .tabItem { Label("Professors", systemImage: "person.2") }
-                AppointmentsView(api: api)
+                AppointmentsView(api: api, role: .student)
                     .tabItem { Label("Appointments", systemImage: "calendar") }
             }
         case .professor:

@@ -18,8 +18,10 @@ struct Appointment: Codable, Identifiable, Equatable {
     }
 
     let id: Int
+    let studentName: String
     let professorName: String
     let appointmentTime: Date
     let status: Status
     let topic: Topic
+    let details: String
 }

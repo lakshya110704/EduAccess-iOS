@@ -27,6 +27,17 @@ final class AppointmentsViewModel {
         }
     }
 
+    func confirm(_ appointment: Appointment) async {
+        do {
+            _ = try await api.confirm(appointmentID: appointment.id)
+            // Confirming declines overlapping requests on the backend, so other rows may have changed too.
+            appointments = try await api.appointments()
+            errorMessage = nil
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     func cancel(_ appointment: Appointment) async {
         do {
             let updated = try await api.cancel(appointmentID: appointment.id)
@@ -42,4 +53,5 @@ final class AppointmentsViewModel {
 
 extension Appointment {
     var canCancel: Bool { status != .cancelled }
+    var canConfirm: Bool { status == .pending }
 }

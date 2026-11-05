@@ -59,6 +59,7 @@ final class LoginViewModelTests: XCTestCase {
 
         XCTAssertEqual(api.logoutCount, 1)
         XCTAssertNil(viewModel.loggedInRole)
+        XCTAssertEqual(viewModel.username, "")
     }
 
     func testSelectedRoleIsSentAndRemembered() async {

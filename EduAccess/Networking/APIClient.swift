@@ -8,6 +8,11 @@ protocol APIClient: Sendable {
     func appointments() async throws -> [Appointment]
     func book(professorID: Int, at time: Date, topic: Appointment.Topic) async throws -> Appointment
     func cancel(appointmentID: Int) async throws -> Appointment
+    func confirm(appointmentID: Int) async throws -> Appointment
+    func me() async throws -> Me
+    func updateAvailability(_ update: AvailabilityUpdate) async throws -> Me
+    /// A page of the web app, for the things only it can do.
+    func webURL(_ path: String) -> URL
 }
 
 enum APIError: LocalizedError, Equatable {

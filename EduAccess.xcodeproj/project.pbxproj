@@ -9,10 +9,18 @@
 /* Begin PBXFileReference section */
 		6A6CAFAD2E963B8300B58D3E /* EduAccess.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EduAccess.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7E0000000000000000000002 /* EduAccessTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EduAccessTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7E0000000000000000000022 /* EduAccessUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EduAccessUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXContainerItemProxy section */
 		7E0000000000000000000008 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6A6CAFA52E963B8300B58D3E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6A6CAFAC2E963B8300B58D3E;
+			remoteInfo = EduAccess;
+		};
+		7E0000000000000000000028 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 6A6CAFA52E963B8300B58D3E /* Project object */;
 			proxyType = 1;
@@ -45,6 +53,11 @@
 			path = EduAccessTests;
 			sourceTree = "<group>";
 		};
+		7E0000000000000000000023 /* EduAccessUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = EduAccessUITests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,6 +75,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7E0000000000000000000025 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -70,6 +90,7 @@
 			children = (
 				6A6CAFAF2E963B8300B58D3E /* EduAccess */,
 				7E0000000000000000000003 /* EduAccessTests */,
+				7E0000000000000000000023 /* EduAccessUITests */,
 				6A6CAFAE2E963B8300B58D3E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -78,6 +99,7 @@
 			isa = PBXGroup;
 			children = (
 				6A6CAFAD2E963B8300B58D3E /* EduAccess.app */,
+				7E0000000000000000000022 /* EduAccessUITests.xctest */,
 				7E0000000000000000000002 /* EduAccessTests.xctest */,
 			);
 			name = Products;
@@ -131,6 +153,29 @@
 			productReference = 7E0000000000000000000002 /* EduAccessTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		7E0000000000000000000021 /* EduAccessUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7E0000000000000000000029 /* Build configuration list for PBXNativeTarget "EduAccessUITests" */;
+			buildPhases = (
+				7E0000000000000000000024 /* Sources */,
+				7E0000000000000000000025 /* Frameworks */,
+				7E0000000000000000000026 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				7E0000000000000000000027 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				7E0000000000000000000023 /* EduAccessUITests */,
+			);
+			name = EduAccessUITests;
+			packageProductDependencies = (
+			);
+			productName = EduAccessUITests;
+			productReference = 7E0000000000000000000022 /* EduAccessUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -145,6 +190,10 @@
 						CreatedOnToolsVersion = 16.4;
 					};
 					7E0000000000000000000001 = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = 6A6CAFAC2E963B8300B58D3E;
+					};
+					7E0000000000000000000021 = {
 						CreatedOnToolsVersion = 16.4;
 						TestTargetID = 6A6CAFAC2E963B8300B58D3E;
 					};
@@ -166,6 +215,7 @@
 			targets = (
 				6A6CAFAC2E963B8300B58D3E /* EduAccess */,
 				7E0000000000000000000001 /* EduAccessTests */,
+				7E0000000000000000000021 /* EduAccessUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -179,6 +229,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		7E0000000000000000000006 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7E0000000000000000000026 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -202,6 +259,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7E0000000000000000000024 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -209,6 +273,11 @@
 			isa = PBXTargetDependency;
 			target = 6A6CAFAC2E963B8300B58D3E /* EduAccess */;
 			targetProxy = 7E0000000000000000000008 /* PBXContainerItemProxy */;
+		};
+		7E0000000000000000000027 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6A6CAFAC2E963B8300B58D3E /* EduAccess */;
+			targetProxy = 7E0000000000000000000028 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -424,6 +493,36 @@
 			};
 			name = Release;
 		};
+		7E000000000000000000002A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = lakshya.EduAccessUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = EduAccess;
+			};
+			name = Debug;
+		};
+		7E000000000000000000002B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = lakshya.EduAccessUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = EduAccess;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -450,6 +549,15 @@
 			buildConfigurations = (
 				7E000000000000000000000A /* Debug */,
 				7E000000000000000000000B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7E0000000000000000000029 /* Build configuration list for PBXNativeTarget "EduAccessUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7E000000000000000000002A /* Debug */,
+				7E000000000000000000002B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

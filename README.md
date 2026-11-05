@@ -1,6 +1,6 @@
 # EduAccess iOS
 
-A small SwiftUI client for the [EduAccess](https://github.com/lakshya110704/EduAccess) Django REST backend. A student logs in, checks a professor's availability, requests an appointment and cancels it.
+A small SwiftUI client for the [EduAccess](https://github.com/lakshya110704/EduAccess) Django REST backend. A student logs in, checks a professor's availability, requests an appointment and cancels it. A professor logs in, sets their availability and confirms or cancels requests.
 
 It talks to a backend running locally and is not on the App Store.
 
@@ -10,6 +10,7 @@ It talks to a backend running locally and is not on the App Store.
 - List the student's saved professors, or search all professors, with live status (Free, Busy, Unavailable) and cabin
 - Request an appointment with a time and a reason. Times round up to the quarter hour, as the backend requires
 - List appointments and cancel one, with a confirmation first
+- Professors set their status with a note and a time they'll be back, and confirm or cancel requests. Confirming declines overlapping requests on the backend, and the list reloads to show that
 - Show the backend's own error message when it refuses a request
 
 ## How it is built
@@ -71,13 +72,13 @@ Not yet run: a physical device, iPad, dark mode, VoiceOver, pull to refresh, the
 - The backend address is a constant in `LiveAPIClient.swift`, and only plain HTTP to a local server is allowed. A deployed HTTPS backend would also need a `Referer` header, which Django requires for CSRF over HTTPS
 - The backend has no JSON login endpoint, so the app posts its HTML login form
 - Students cannot add or remove saved professors in the app. That is done on the web app
-- No professor screens, notifications, walk-in hours, status notes or 30-minute bookings, although the backend supports them
+- No notifications, walk-in hours or 30-minute bookings, although the backend supports them
+- Professors set their cabin on the web app, because the backend has no API for it. A professor without a cabin can log in, but the backend refuses any change until the cabin is set
 
 ## Roadmap
 
-Nothing in this section is built. The goal is full parity with the EduAccess web app, including the professor side:
+Nothing in this section is built. The goal is full parity with the EduAccess web app:
 
-- Professors log in, set their availability and status notes, and confirm or cancel requests
 - Students save professors, see walk-in hours and open cabin directions
 - Notifications and automatic availability refresh
 

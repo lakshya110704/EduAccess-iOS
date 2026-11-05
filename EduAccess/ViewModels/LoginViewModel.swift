@@ -39,5 +39,6 @@ final class LoginViewModel {
         // Back to the login screen even if the request fails: logging in again replaces the session.
         try? await api.logout()
         loggedInRole = nil
+        username = ""
     }
 }

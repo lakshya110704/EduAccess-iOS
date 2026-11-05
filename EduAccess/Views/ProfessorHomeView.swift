@@ -5,12 +5,11 @@ struct ProfessorHomeView: View {
     let onLogout: () -> Void
 
     var body: some View {
-        NavigationStack {
-            ContentUnavailableView("Signed In", systemImage: "person.crop.circle.badge.checkmark")
-                .navigationTitle("Professor")
-                .toolbar {
-                    Button("Log Out", action: onLogout)
-                }
+        TabView {
+            ProfessorStatusView(api: api, onLogout: onLogout)
+                .tabItem { Label("My Status", systemImage: "person.crop.circle") }
+            AppointmentsView(api: api, role: .professor)
+                .tabItem { Label("Requests", systemImage: "calendar") }
         }
     }
 }

@@ -61,8 +61,28 @@ struct LiveAPIClient: APIClient {
     }
 
     func cancel(appointmentID: Int) async throws -> Appointment {
+        try await setStatus(.cancelled, appointmentID: appointmentID)
+    }
+
+    func confirm(appointmentID: Int) async throws -> Appointment {
+        try await setStatus(.confirmed, appointmentID: appointmentID)
+    }
+
+    func me() async throws -> Me {
+        try await send(URLRequest(url: url("api/me/")))
+    }
+
+    func updateAvailability(_ update: AvailabilityUpdate) async throws -> Me {
+        try await send(write("PATCH", url("api/me/"), update))
+    }
+
+    func webURL(_ path: String) -> URL {
+        url(path)
+    }
+
+    private func setStatus(_ status: Appointment.Status, appointmentID: Int) async throws -> Appointment {
         struct Body: Encodable { let status: Appointment.Status }
-        return try await send(write("PATCH", url("api/appointments/\(appointmentID)/"), Body(status: .cancelled)))
+        return try await send(write("PATCH", url("api/appointments/\(appointmentID)/"), Body(status: status)))
     }
 
     // MARK: - Helpers
@@ -79,11 +99,17 @@ struct LiveAPIClient: APIClient {
     static let decoder: JSONDecoder = {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
-        decoder.dateDecodingStrategy = .iso8601
+        // Django sends fractional seconds only when a stored time has them, so accept both forms.
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let text = try decoder.singleValueContainer().decode(String.self)
+            if let date = try? Date(text, strategy: .iso8601) { return date }
+            if let date = try? Date(text, strategy: .iso8601.year().month().day().time(includingFractionalSeconds: true).timeZone(separator: .colon)) { return date }
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Bad date: \(text)"))
+        }
         return decoder
     }()
 
-    private static let encoder: JSONEncoder = {
+    static let encoder: JSONEncoder = {
         let encoder = JSONEncoder()
         encoder.keyEncodingStrategy = .convertToSnakeCase
         encoder.dateEncodingStrategy = .iso8601

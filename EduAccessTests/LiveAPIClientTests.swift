@@ -22,6 +22,34 @@ final class LiveAPIClientTests: XCTestCase {
         XCTAssertEqual(appointment.appointmentTime, ISO8601DateFormatter().date(from: "2026-11-06T20:00:00Z"))
     }
 
+    func testDecodesDatesWithFractionalSeconds() throws {
+        let json = #"{"pick":"In class","text":"","until":"2026-11-07T01:30:00.250000+05:30"}"#
+
+        let note = try LiveAPIClient.decoder.decode(StatusNote.self, from: Data(json.utf8))
+
+        XCTAssertEqual(note.until?.timeIntervalSince1970 ?? 0, ISO8601DateFormatter().date(from: "2026-11-06T20:00:00Z")!.timeIntervalSince1970 + 0.25, accuracy: 0.001)
+    }
+
+    func testDecodesMe() throws {
+        let json = #"{"id":3,"username":"prof1","display_name":"Ashish Gupta","role":"professor","availability_status":"Busy","status_note":{"pick":"In class","text":"Back soon","until":null},"cabin_label":"AB2 FB3 : 106"}"#
+
+        let me = try LiveAPIClient.decoder.decode(Me.self, from: Data(json.utf8))
+
+        XCTAssertEqual(me.availabilityStatus, .busy)
+        XCTAssertEqual(me.statusNote, StatusNote(pick: "In class", text: "Back soon", until: nil))
+    }
+
+    func testAvailabilityUpdateSendsNullToClearTheBackTime() throws {
+        let update = AvailabilityUpdate(availabilityStatus: .free, statusPick: "", statusText: "", statusUntil: nil)
+
+        let data = try LiveAPIClient.encoder.encode(update)
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+        XCTAssertEqual(json["availability_status"] as? String, "Free")
+        XCTAssertEqual(json["status_pick"] as? String, "")
+        XCTAssertTrue(json["status_until"] is NSNull)
+    }
+
     func testReadsDetailError() {
         let body = Data(#"{"detail":"Type at least 2 characters to search."}"#.utf8)
         XCTAssertEqual(APIError.server(body: body), .server("Type at least 2 characters to search."))

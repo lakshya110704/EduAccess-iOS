@@ -1,10 +1,12 @@
 import SwiftUI
 
 struct AppointmentsView: View {
+    let role: UserRole
     @State private var viewModel: AppointmentsViewModel
     @State private var appointmentToCancel: Appointment?
 
-    init(api: any APIClient) {
+    init(api: any APIClient, role: UserRole) {
+        self.role = role
         _viewModel = State(initialValue: AppointmentsViewModel(api: api))
     }
 
@@ -13,7 +15,7 @@ struct AppointmentsView: View {
             List(viewModel.appointments) { appointment in
                 row(appointment)
             }
-            .navigationTitle("Appointments")
+            .navigationTitle(role == .student ? "Appointments" : "Requests")
             .refreshable { await viewModel.load() }
             .task { await viewModel.load() }
             .overlay { placeholder }
@@ -23,7 +25,7 @@ struct AppointmentsView: View {
                 }
                 Button("Keep", role: .cancel) {}
             } message: { appointment in
-                Text("With \(appointment.professorName). This cannot be undone.")
+                Text("With \(otherPerson(appointment)). This cannot be undone.")
             }
         }
     }
@@ -32,20 +34,36 @@ struct AppointmentsView: View {
         Binding(get: { appointmentToCancel != nil }, set: { if !$0 { appointmentToCancel = nil } })
     }
 
+    private func otherPerson(_ appointment: Appointment) -> String {
+        role == .student ? appointment.professorName : appointment.studentName
+    }
+
     private func row(_ appointment: Appointment) -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(appointment.professorName)
+                Text(otherPerson(appointment))
                     .font(.headline)
                 Text(appointment.appointmentTime.formatted(date: .abbreviated, time: .shortened))
                 Text("\(appointment.topic.rawValue) · \(appointment.status.rawValue)")
                     .foregroundStyle(.secondary)
+                if !appointment.details.isEmpty {
+                    Text(appointment.details)
+                        .foregroundStyle(.secondary)
+                }
             }
             .font(.subheadline)
             Spacer()
-            if appointment.canCancel {
-                Button("Cancel", role: .destructive) { appointmentToCancel = appointment }
+            VStack(alignment: .trailing, spacing: 12) {
+                if role == .professor && appointment.canConfirm {
+                    Button("Confirm") {
+                        Task { await viewModel.confirm(appointment) }
+                    }
                     .buttonStyle(.borderless)
+                }
+                if appointment.canCancel {
+                    Button("Cancel", role: .destructive) { appointmentToCancel = appointment }
+                        .buttonStyle(.borderless)
+                }
             }
         }
     }
@@ -56,9 +74,9 @@ struct AppointmentsView: View {
             ContentUnavailableView("Could Not Load Appointments", systemImage: "wifi.exclamationmark", description: Text(error))
         } else if viewModel.appointments.isEmpty && !viewModel.isLoading {
             ContentUnavailableView(
-                "No Appointments",
+                role == .student ? "No Appointments" : "No Requests",
                 systemImage: "calendar",
-                description: Text("Pick a professor to request one.")
+                description: Text(role == .student ? "Pick a professor to request one." : "Student requests appear here.")
             )
         }
     }

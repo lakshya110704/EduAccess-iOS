@@ -8,6 +8,9 @@ final class MockAPIClient: APIClient {
     var appointmentsResult: Result<[Appointment], Error> = .success([])
     var bookError: Error?
     var cancelResult: Result<Appointment, Error>?
+    var confirmError: Error?
+    var meResult: Result<Me, Error> = .success(.sample)
+    var updateError: Error?
 
     private(set) var loginCalls: [(username: String, password: String, role: UserRole)] = []
     private(set) var logoutCount = 0
@@ -15,6 +18,8 @@ final class MockAPIClient: APIClient {
     private(set) var searches: [String] = []
     private(set) var bookings: [(professorID: Int, time: Date, topic: Appointment.Topic)] = []
     private(set) var cancelledIDs: [Int] = []
+    private(set) var confirmedIDs: [Int] = []
+    private(set) var updates: [AvailabilityUpdate] = []
 
     func login(username: String, password: String, role: UserRole) async throws {
         loginCalls.append((username, password, role))
@@ -49,14 +54,43 @@ final class MockAPIClient: APIClient {
         cancelledIDs.append(appointmentID)
         return try cancelResult!.get()
     }
+
+    func confirm(appointmentID: Int) async throws -> Appointment {
+        confirmedIDs.append(appointmentID)
+        if let confirmError { throw confirmError }
+        return Appointment.sample(id: appointmentID, status: .confirmed)
+    }
+
+    func me() async throws -> Me {
+        try meResult.get()
+    }
+
+    func updateAvailability(_ update: AvailabilityUpdate) async throws -> Me {
+        updates.append(update)
+        if let updateError { throw updateError }
+        return Me(
+            displayName: "Ashish Gupta",
+            availabilityStatus: update.availabilityStatus,
+            statusNote: nil,
+            cabinLabel: "AB2 FB3 : 106"
+        )
+    }
+
+    nonisolated func webURL(_ path: String) -> URL {
+        URL(string: "http://example.test/\(path)")!
+    }
 }
 
 extension Professor {
     static let sample = Professor(id: 3, displayName: "Ashish Gupta", availabilityStatus: .free, cabinLabel: "AB2 FB3 : 106")
 }
 
+extension Me {
+    static let sample = Me(displayName: "Ashish Gupta", availabilityStatus: .free, statusNote: nil, cabinLabel: "AB2 FB3 : 106")
+}
+
 extension Appointment {
     static func sample(id: Int, status: Status) -> Appointment {
-        Appointment(id: id, professorName: "Ashish Gupta", appointmentTime: Date(timeIntervalSince1970: 1_800_000_000), status: status, topic: .doubt)
+        Appointment(id: id, studentName: "Riya Sharma", professorName: "Ashish Gupta", appointmentTime: Date(timeIntervalSince1970: 1_800_000_000), status: status, topic: .doubt, details: "")
     }
 }
