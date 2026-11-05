@@ -1,8 +1,7 @@
 import Foundation
 
 struct LiveAPIClient: APIClient {
-    // shortcut: local dev server over plain HTTP, make this a build setting and send a Referer header (Django requires it on HTTPS) before pointing at a deployed backend.
-    var baseURL = URL(string: "http://127.0.0.1:8000")!
+    var baseURL = LiveAPIClient.configuredBaseURL
     // Ephemeral: the session cookie is gone when the app quits, so nothing is left on disk.
     var session = URLSession(configuration: .ephemeral)
 
@@ -14,6 +13,7 @@ struct LiveAPIClient: APIClient {
         var request = URLRequest(url: url("login/"))
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.setValue(referer, forHTTPHeaderField: "Referer")
         request.httpBody = Self.formBody([
             "csrfmiddlewaretoken": csrfToken ?? "",
             "role": role.rawValue,
@@ -100,6 +100,30 @@ struct LiveAPIClient: APIClient {
         return try await send(write("PATCH", url("api/appointments/\(appointmentID)/"), Body(status: status)))
     }
 
+    // MARK: - Configuration
+
+    /// The API_BASE_URL build setting, through Info.plist. UI tests launch with -requireLocalBackend so they
+    /// can never write to a deployed backend, whatever the build was configured with.
+    static let configuredBaseURL: URL = {
+        let setting = Bundle.main.object(forInfoDictionaryKey: "APIBaseURL") as? String ?? ""
+        guard let url = baseURL(from: setting) else {
+            fatalError("API_BASE_URL is not a valid http or https address: \(setting)")
+        }
+        if CommandLine.arguments.contains("-requireLocalBackend") && url.host() != "127.0.0.1" {
+            fatalError("Refusing to run UI tests against \(url)")
+        }
+        return url
+    }()
+
+    /// Accepts an address with or without a trailing slash. Requests add their own.
+    static func baseURL(from text: String) -> URL? {
+        let trimmed = text.hasSuffix("/") ? String(text.dropLast()) : text
+        guard let url = URL(string: trimmed), url.host() != nil, ["http", "https"].contains(url.scheme) else {
+            return nil
+        }
+        return url
+    }
+
     // MARK: - Helpers
 
     /// Percent-encodes everything outside the unreserved set, so "+" and "&" in a password survive.
@@ -131,6 +155,11 @@ struct LiveAPIClient: APIClient {
         return encoder
     }()
 
+    /// Django's CSRF check refuses HTTPS writes without a Referer from its own host.
+    private var referer: String {
+        "\(baseURL.absoluteString)/"
+    }
+
     private var csrfToken: String? {
         session.configuration.httpCookieStorage?.cookies(for: baseURL)?.first { $0.name == "csrftoken" }?.value
     }
@@ -145,6 +174,7 @@ struct LiveAPIClient: APIClient {
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue(csrfToken, forHTTPHeaderField: "X-CSRFToken")
+        request.setValue(referer, forHTTPHeaderField: "Referer")
         return request
     }
 

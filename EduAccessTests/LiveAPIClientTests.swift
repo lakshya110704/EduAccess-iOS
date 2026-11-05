@@ -1,6 +1,24 @@
 import XCTest
 @testable import EduAccess
 
+/// Answers every request with an empty 200 and keeps what it was sent.
+final class RecordingProtocol: URLProtocol {
+    nonisolated(unsafe) static var requests: [URLRequest] = []
+
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+
+    override func startLoading() {
+        Self.requests.append(request)
+        let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
+        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: Data())
+        client?.urlProtocolDidFinishLoading(self)
+    }
+
+    override func stopLoading() {}
+}
+
 /// The JSON here is copied from real responses of the Django backend.
 final class LiveAPIClientTests: XCTestCase {
     func testDecodesProfessor() throws {
@@ -74,6 +92,45 @@ final class LiveAPIClientTests: XCTestCase {
         XCTAssertTrue(json["status_until"] is NSNull)
     }
 
+    func testBaseURLAcceptsATrailingSlashAndRejectsBadAddresses() {
+        XCTAssertEqual(LiveAPIClient.baseURL(from: "https://example.test/")?.absoluteString, "https://example.test")
+        XCTAssertEqual(LiveAPIClient.baseURL(from: "https://example.test:8443")?.absoluteString, "https://example.test:8443")
+        XCTAssertNil(LiveAPIClient.baseURL(from: ""))
+        XCTAssertNil(LiveAPIClient.baseURL(from: "$(API_BASE_URL)"))
+        XCTAssertNil(LiveAPIClient.baseURL(from: "ftp://example.test"))
+    }
+
+    func testWritesSendCSRFTokenAndRefererForHTTPS() async throws {
+        let client = stubbedClient()
+
+        try await client.logout()
+
+        let request = try XCTUnwrap(RecordingProtocol.requests.last)
+        XCTAssertEqual(request.httpMethod, "POST")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "X-CSRFToken"), "token123")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "Referer"), "https://example.test/")
+    }
+
+    func testLoginFormSendsRefererForHTTPS() async throws {
+        let client = stubbedClient()
+
+        try await client.login(username: "student1", password: "secret", role: .student)
+
+        let request = try XCTUnwrap(RecordingProtocol.requests.last)
+        XCTAssertEqual(request.httpMethod, "POST")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "Referer"), "https://example.test/")
+    }
+
+    private func stubbedClient() -> LiveAPIClient {
+        RecordingProtocol.requests = []
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [RecordingProtocol.self]
+        configuration.httpCookieStorage?.setCookie(HTTPCookie(properties: [
+            .domain: "example.test", .path: "/", .name: "csrftoken", .value: "token123", .secure: "TRUE",
+        ])!)
+        return LiveAPIClient(baseURL: URL(string: "https://example.test")!, session: URLSession(configuration: configuration))
+    }
+
     func testReadsDetailError() {
         let body = Data(#"{"detail":"Type at least 2 characters to search."}"#.utf8)
         XCTAssertEqual(APIError.server(body: body), .server("Type at least 2 characters to search."))
@@ -94,7 +151,8 @@ final class LiveAPIClientTests: XCTestCase {
     }
 
     func testURLsKeepExactlyOneTrailingSlash() {
-        XCTAssertEqual(LiveAPIClient().url("login/").absoluteString, "http://127.0.0.1:8000/login/")
-        XCTAssertEqual(LiveAPIClient().url("api/appointments/5/").absoluteString, "http://127.0.0.1:8000/api/appointments/5/")
+        let client = LiveAPIClient(baseURL: URL(string: "https://example.test")!)
+        XCTAssertEqual(client.url("login/").absoluteString, "https://example.test/login/")
+        XCTAssertEqual(client.url("api/appointments/5/").absoluteString, "https://example.test/api/appointments/5/")
     }
 }

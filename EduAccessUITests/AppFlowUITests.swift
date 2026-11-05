@@ -2,7 +2,7 @@ import XCTest
 
 /// Drives the real app against a local backend with seed_demo data. Skipped unless the password is
 /// supplied: TEST_RUNNER_EDUACCESS_TEST_PASSWORD=... xcodebuild test ...
-/// The app's default address is the local server, so this cannot write to a deployed backend.
+/// The launch argument makes the app refuse any host but localhost, so this cannot write to a deployed backend.
 final class AppFlowUITests: XCTestCase {
     private var password = ""
     private var app = XCUIApplication()
@@ -13,6 +13,7 @@ final class AppFlowUITests: XCTestCase {
         try XCTSkipIf(supplied == nil, "No EDUACCESS_TEST_PASSWORD")
         password = supplied ?? ""
         continueAfterFailure = false
+        app.launchArguments = ["-requireLocalBackend"]
         app.launch()
     }
 
