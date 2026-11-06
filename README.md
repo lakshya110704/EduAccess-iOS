@@ -30,9 +30,9 @@ It has been run against a local copy of the backend, over HTTP and over HTTPS. I
 
 ```
 EduAccess/
-  Models/         Professor, Appointment, Me, OpenTime, UserRole, AvailabilityStatus
+  Models/         Professor, Appointment, Me, OpenTime, AppNotification, UserRole, AvailabilityStatus
   Networking/     APIClient protocol, LiveAPIClient
-  ViewModels/     Login, Professors, Booking, Appointments, ProfessorStatus, OpenTime
+  ViewModels/     Login, Professors, Booking, Appointments, ProfessorStatus, OpenTime, Notifications
   Views/          SwiftUI screens
 EduAccessTests/   View model tests with a mock, client tests, tests against a local backend
 EduAccessUITests/ Full flows through the real app against a local backend
@@ -77,11 +77,11 @@ Last runs, on an iPhone 16 simulator with iOS 18.0 and Xcode 27.2:
 
 | Run | Passed | Failed | Skipped |
 |---|---|---|---|
-| Fresh clone, no password | 61 | 0 | 9 |
-| Local backend over HTTP | 70 | 0 | 0 |
-| Local backend in production mode behind a local TLS proxy, over HTTPS | 70 | 0 | 0 |
+| Fresh clone, no password | 79 | 0 | 13 |
+| Local backend over HTTP | 92 | 0 | 0 |
+| Local backend in production mode behind a local TLS proxy, over HTTPS | 92 | 0 | 0 |
 
-The 9 skipped tests are the 7 that call the local backend directly and the 2 UI flows. The UI flows cover a student searching, saving a professor and requesting an appointment, then a professor setting a status note, confirming and cancelling that request.
+The 13 skipped tests are the 11 that call the local backend directly and the 2 UI flows. The UI flows cover a student searching, saving a professor, requesting an appointment and editing its reason, then a professor setting a status note, confirming and cancelling that request, and reading the notification about it.
 
 These UI flows needed retries for dropped taps while the machine was under heavy load. Those retries are in the test code.
 
@@ -90,26 +90,33 @@ These UI flows needed retries for dropped taps while the machine was under heavy
 Against the same local backend:
 
 - A wrong password, or an account used under the wrong role, shows an error in the app
+- Over HTTP, the app stayed logged in after being quit and reopened, and stayed logged out after logging out, quitting and reopening
+- With sessions deleted on the backend while the app was open, the next refresh got `403` and the app returned to login with a message
 - With the app left open, the backend log showed a request every 10 to 11 seconds for the visible tab only, and none after logout
 - Over HTTPS with production settings, session and CSRF cookies were `Secure`. Writes without a `Referer` got `403` and writes with one succeeded
 - Cabin directions page: `200` with `curl`
 
 Deployed backend: only a read-only check that `/healthz/` returns `200` with a valid certificate. Logging in and any writes there are not yet run.
 
-Not yet run: a physical device, iPad, dark mode, VoiceOver, pull to refresh, tapping the directions and set-cabin links, the app with the backend offline, and a professor without a cabin in the UI.
+Not yet run: a physical device, iPad, dark mode, VoiceOver, pull to refresh, tapping the directions, set-cabin and create-account links, the app with the backend offline, and a professor without a cabin in the UI.
 
 ## Limitations
 
 - Plain HTTP only works for local addresses. Anything else needs HTTPS
-- The backend has no JSON login endpoint, so the app posts its HTML login form
+- The backend has no JSON login endpoint, so the app posts its HTML login form. That form's wrong-role and awaiting-approval messages are only in its HTML, so the app shows one shared message for both
+- Cabin directions open the website's page, which has the Maps link, 360 view, written steps and WhatsApp share. The backend has no API for a native screen
 - Professors set their cabin on the web app, because the backend has no API for it. A professor without a cabin can log in, but the backend refuses any change until the cabin is set
 
 ## Roadmap
 
-Nothing in this section is built. The goal is full parity with the EduAccess web app:
+Nothing in this section is built. The goal is full parity with the EduAccess website:
 
 - Sign up in the app. This needs an API the backend does not have yet. Today the login screen links to the website's form
 - Professors set their cabin in the app. This needs an API the backend does not have yet
+
+Not on the website, and also not built:
+
+- Push notifications. The in-app list is what the website has. Push would need a paid Apple Developer account and backend work
 
 ## Contributors
 
