@@ -111,6 +111,7 @@ final class MockAPIClient: APIClient {
         if let updateError { throw updateError }
         return Me(
             displayName: "Ashish Gupta",
+            role: .professor,
             availabilityStatus: update.availabilityStatus,
             statusNote: nil,
             cabinLabel: "AB2 FB3 : 106"
@@ -140,7 +141,7 @@ extension Professor {
 }
 
 extension Me {
-    static let sample = Me(displayName: "Ashish Gupta", availabilityStatus: .free, statusNote: nil, cabinLabel: "AB2 FB3 : 106")
+    static let sample = Me(displayName: "Ashish Gupta", role: .professor, availabilityStatus: .free, statusNote: nil, cabinLabel: "AB2 FB3 : 106")
 }
 
 extension Appointment {

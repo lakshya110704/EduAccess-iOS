@@ -128,6 +128,27 @@ final class LiveBackendTests: XCTestCase {
         _ = try await professor.cancel(appointmentID: request.id)
     }
 
+    func testASecondClientWithTheSameCookiesIsStillLoggedIn() async throws {
+        // Stands in for the app relaunching with its kept cookies.
+        let first = URLSessionConfiguration.ephemeral
+        let second = URLSessionConfiguration.ephemeral
+        second.httpCookieStorage = first.httpCookieStorage
+        let client = LiveAPIClient(session: URLSession(configuration: first))
+        try await client.login(username: "prof2", password: password, role: .professor)
+
+        let relaunched = LiveAPIClient(session: URLSession(configuration: second))
+        let me = try await relaunched.me()
+        XCTAssertEqual(me.role, .professor)
+
+        try await relaunched.logout()
+        do {
+            _ = try await client.me()
+            XCTFail("Session survived logout")
+        } catch {
+            XCTAssertEqual(error as? APIError, .sessionExpired)
+        }
+    }
+
     func testReadAfterLogoutReportsTheSessionEnded() async throws {
         let client = try await loggedIn("student2", as: .student)
         try await client.logout()

@@ -87,6 +87,7 @@ final class LiveAPIClientTests: XCTestCase {
 
         let me = try LiveAPIClient.decoder.decode(Me.self, from: Data(json.utf8))
 
+        XCTAssertEqual(me.role, .professor)
         XCTAssertEqual(me.availabilityStatus, .busy)
         XCTAssertEqual(me.statusNote, StatusNote(pick: "In class", text: "Back soon", until: nil))
     }

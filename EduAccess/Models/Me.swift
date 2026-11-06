@@ -9,6 +9,7 @@ struct StatusNote: Codable, Equatable, Hashable {
 /// The logged-in user, from GET /api/me/.
 struct Me: Decodable, Equatable {
     let displayName: String
+    let role: UserRole
     let availabilityStatus: AvailabilityStatus
     let statusNote: StatusNote?
     let cabinLabel: String

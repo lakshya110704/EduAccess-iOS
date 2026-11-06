@@ -3,7 +3,7 @@ import SwiftUI
 
 @main
 struct EduAccessApp: App {
-    private let api: any APIClient = LiveAPIClient()
+    private let api: any APIClient = LiveAPIClient.forApp()
 
     var body: some Scene {
         WindowGroup {
@@ -23,6 +23,7 @@ private struct RootView: View {
 
     var body: some View {
         content
+            .task { await login.restoreSession() }
             .onReceive(NotificationCenter.default.publisher(for: .sessionExpired).receive(on: RunLoop.main)) { _ in
                 login.sessionExpired()
             }
@@ -30,6 +31,15 @@ private struct RootView: View {
 
     @ViewBuilder
     private var content: some View {
+        if login.isRestoring {
+            ProgressView()
+        } else {
+            home
+        }
+    }
+
+    @ViewBuilder
+    private var home: some View {
         switch login.loggedInRole {
         case .student:
             TabView {

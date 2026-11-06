@@ -16,6 +16,7 @@ It has been run against a local copy of the backend, over HTTP and over HTTPS. I
 - Professors add and remove walk-in time for today
 - Availability and appointment lists refresh every 10 seconds while on screen, as the web app's dashboards do
 - Notifications list for both roles, refreshed with the other lists
+- Stay logged in between launches
 - Return to login with a message when the backend says the session has ended
 - Show the backend's own error message when it refuses a request
 
@@ -24,7 +25,7 @@ It has been run against a local copy of the backend, over HTTP and over HTTPS. I
 - SwiftUI and Swift Concurrency, iOS 18.0 deployment target, no third-party dependencies
 - MVVM: one `@Observable` view model per screen
 - Views and view models depend on the `APIClient` protocol. `LiveAPIClient` talks to the backend with `URLSession`, and the tests use `MockAPIClient`
-- The session cookie is kept in an ephemeral `URLSession`, so nothing is stored on disk and each launch starts at login
+- The session cookie stays in the app's cookie storage, so a user stays logged in between launches, as on the website, until they log out or the backend ends the session
 
 ```
 EduAccess/

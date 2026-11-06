@@ -82,6 +82,29 @@ final class LoginViewModelTests: XCTestCase {
         XCTAssertNil(viewModel.errorMessage)
     }
 
+    func testRestoreOpensTheRoleOfAKeptSession() async {
+        let viewModel = LoginViewModel(api: MockAPIClient())
+        XCTAssertTrue(viewModel.isRestoring)
+
+        await viewModel.restoreSession()
+
+        XCTAssertEqual(viewModel.loggedInRole, .professor)
+        XCTAssertFalse(viewModel.isRestoring)
+    }
+
+    func testRestoreWithoutASessionShowsLoginWithNoError() async {
+        let api = MockAPIClient()
+        api.meResult = .failure(APIError.sessionExpired)
+        let viewModel = LoginViewModel(api: api)
+
+        await viewModel.restoreSession()
+        viewModel.sessionExpired()
+
+        XCTAssertNil(viewModel.loggedInRole)
+        XCTAssertFalse(viewModel.isRestoring)
+        XCTAssertNil(viewModel.errorMessage)
+    }
+
     func testSelectedRoleIsSentAndRemembered() async {
         let api = MockAPIClient()
         let viewModel = LoginViewModel(api: api)

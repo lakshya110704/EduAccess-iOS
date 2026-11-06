@@ -1,4 +1,4 @@
-enum UserRole: String, CaseIterable, Identifiable {
+enum UserRole: String, Codable, CaseIterable, Identifiable {
     case student
     case professor
 

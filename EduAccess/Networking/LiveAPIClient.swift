@@ -2,8 +2,15 @@ import Foundation
 
 struct LiveAPIClient: APIClient {
     var baseURL = LiveAPIClient.configuredBaseURL
-    // Ephemeral: the session cookie is gone when the app quits, so nothing is left on disk.
+    // Ephemeral by default so test clients don't share a login. The app itself uses forApp().
     var session = URLSession(configuration: .ephemeral)
+
+    /// Keeps the session cookie between launches, so a user stays logged in as on the website. UI tests
+    /// launch with -uiTesting to start logged out every time.
+    static func forApp() -> LiveAPIClient {
+        let uiTesting = CommandLine.arguments.contains("-uiTesting")
+        return LiveAPIClient(session: URLSession(configuration: uiTesting ? .ephemeral : .default))
+    }
 
     /// The backend has no JSON login, only Django's session login form, so this fetches the
     /// CSRF cookie and posts the form the same way the web frontend does.
@@ -114,14 +121,14 @@ struct LiveAPIClient: APIClient {
 
     // MARK: - Configuration
 
-    /// The API_BASE_URL build setting, through Info.plist. UI tests launch with -requireLocalBackend so they
+    /// The API_BASE_URL build setting, through Info.plist. UI tests launch with -uiTesting so they
     /// can never write to a deployed backend, whatever the build was configured with.
     static let configuredBaseURL: URL = {
         let setting = Bundle.main.object(forInfoDictionaryKey: "APIBaseURL") as? String ?? ""
         guard let url = baseURL(from: setting) else {
             fatalError("API_BASE_URL is not a valid http or https address: \(setting)")
         }
-        if CommandLine.arguments.contains("-requireLocalBackend") && url.host() != "127.0.0.1" {
+        if CommandLine.arguments.contains("-uiTesting") && url.host() != "127.0.0.1" {
             fatalError("Refusing to run UI tests against \(url)")
         }
         return url

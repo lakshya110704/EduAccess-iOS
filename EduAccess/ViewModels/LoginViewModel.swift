@@ -8,6 +8,7 @@ final class LoginViewModel {
     var password = ""
     var role = UserRole.student
     private(set) var loggedInRole: UserRole?
+    private(set) var isRestoring = true
     private(set) var isLoading = false
     private(set) var errorMessage: String?
 
@@ -19,6 +20,14 @@ final class LoginViewModel {
 
     var canSubmit: Bool {
         !username.trimmingCharacters(in: .whitespaces).isEmpty && !password.isEmpty && !isLoading
+    }
+
+    /// Picks up a session kept from an earlier launch. Without one, or offline, this is the login screen.
+    func restoreSession() async {
+        defer { isRestoring = false }
+        if let me = try? await api.me() {
+            loggedInRole = me.role
+        }
     }
 
     func login() async {

@@ -8,6 +8,7 @@ final class ProfessorStatusViewModelTests: XCTestCase {
         let back = Date(timeIntervalSince1970: 1_800_000_000)
         api.meResult = .success(Me(
             displayName: "Ashish Gupta",
+            role: .professor,
             availabilityStatus: .busy,
             statusNote: StatusNote(pick: "Lunch", text: "Back soon", until: back),
             cabinLabel: "AB2 FB3 : 106"

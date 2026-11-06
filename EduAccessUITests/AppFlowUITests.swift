@@ -13,7 +13,7 @@ final class AppFlowUITests: XCTestCase {
         try XCTSkipIf(supplied == nil, "No EDUACCESS_TEST_PASSWORD")
         password = supplied ?? ""
         continueAfterFailure = false
-        app.launchArguments = ["-requireLocalBackend"]
+        app.launchArguments = ["-uiTesting"]
         app.launch()
     }
 
@@ -85,8 +85,7 @@ final class AppFlowUITests: XCTestCase {
         app.buttons["Remove Ashish Gupta from saved"].tap()
         XCTAssertTrue(app.buttons["Save Ashish Gupta"].waitForExistence(timeout: timeout))
 
-        text(containing: "Ashish Gupta").tap()
-        XCTAssertTrue(app.buttons["Request Appointment"].waitForExistence(timeout: timeout))
+        tapUntil(text(containing: "Ashish Gupta"), reveals: app.buttons["Request Appointment"])
         XCTAssertTrue(app.links["Directions to Cabin"].exists || app.buttons["Directions to Cabin"].exists)
         attachScreenshot("student-booking")
         tapUntil(app.buttons["Request Appointment"], reveals: app.alerts["Request Sent"])
