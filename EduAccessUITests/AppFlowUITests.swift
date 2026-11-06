@@ -54,6 +54,15 @@ final class AppFlowUITests: XCTestCase {
         XCTAssertTrue(tab.isSelected, "Tab \(name) did not open")
     }
 
+    private func tapUntil(_ element: XCUIElement, reveals next: XCUIElement) {
+        XCTAssertTrue(element.waitForExistence(timeout: timeout))
+        for _ in 0..<4 where !next.exists {
+            element.tap()
+            _ = next.waitForExistence(timeout: 15)
+        }
+        XCTAssertTrue(next.exists)
+    }
+
     private func text(containing fragment: String) -> XCUIElement {
         app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", fragment)).firstMatch
     }
@@ -88,6 +97,12 @@ final class AppFlowUITests: XCTestCase {
         openTab("Appointments")
         waitForText(containing: "· Pending")
         attachScreenshot("student-appointments")
+
+        tapUntil(app.buttons["Edit"].firstMatch, reveals: app.buttons["Save"])
+        attachScreenshot("student-edit-reason")
+        type("Question 2", into: app.textFields["Details (optional)"])
+        app.buttons["Save"].tap()
+        waitForText(containing: "Question 2")
 
         openTab("Professors")
         // Log Out is hidden while the search bar is active.

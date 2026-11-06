@@ -4,6 +4,7 @@ struct AppointmentsView: View {
     let role: UserRole
     @State private var viewModel: AppointmentsViewModel
     @State private var appointmentToCancel: Appointment?
+    @State private var appointmentToEdit: Appointment?
 
     init(api: any APIClient, role: UserRole) {
         self.role = role
@@ -21,6 +22,9 @@ struct AppointmentsView: View {
             .task { await viewModel.autoRefresh() }
             .overlay { placeholder }
             .safeAreaInset(edge: .top) { errorBanner }
+            .sheet(item: $appointmentToEdit) { appointment in
+                EditReasonView(appointment: appointment, viewModel: viewModel)
+            }
             .alert("Cancel Appointment?", isPresented: isConfirmingCancel, presenting: appointmentToCancel) { appointment in
                 Button("Cancel Appointment", role: .destructive) {
                     Task { await viewModel.cancel(appointment) }
@@ -61,6 +65,10 @@ struct AppointmentsView: View {
                         Task { await viewModel.confirm(appointment) }
                     }
                     .buttonStyle(.borderless)
+                }
+                if role == .student && appointment.canEditReason {
+                    Button("Edit") { appointmentToEdit = appointment }
+                        .buttonStyle(.borderless)
                 }
                 if appointment.canCancel {
                     Button("Cancel", role: .destructive) { appointmentToCancel = appointment }

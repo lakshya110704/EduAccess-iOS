@@ -52,6 +52,14 @@ struct LiveAPIClient: APIClient {
         try await send(write("POST", url("api/appointments/"), request))
     }
 
+    func updateReason(appointmentID: Int, topic: Appointment.Topic, details: String) async throws -> Appointment {
+        struct Body: Encodable {
+            let topic: Appointment.Topic
+            let details: String
+        }
+        return try await send(write("PATCH", url("api/appointments/\(appointmentID)/"), Body(topic: topic, details: details)))
+    }
+
     func setSaved(_ saved: Bool, professorID: Int) async throws -> Professor {
         try await send(bodylessWrite(saved ? "POST" : "DELETE", url("api/professors/\(professorID)/mine/")))
     }

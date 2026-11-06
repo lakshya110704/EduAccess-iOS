@@ -41,15 +41,35 @@ final class AppointmentsViewModel {
         }
     }
 
+    /// Returns whether it saved, so the edit screen knows whether to close.
+    func saveReason(_ appointment: Appointment, topic: Appointment.Topic, details: String) async -> Bool {
+        do {
+            let updated = try await api.updateReason(
+                appointmentID: appointment.id,
+                topic: topic,
+                details: details.trimmingCharacters(in: .whitespacesAndNewlines)
+            )
+            replace(updated)
+            errorMessage = nil
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            return false
+        }
+    }
+
     func cancel(_ appointment: Appointment) async {
         do {
-            let updated = try await api.cancel(appointmentID: appointment.id)
-            if let index = appointments.firstIndex(where: { $0.id == updated.id }) {
-                appointments[index] = updated
-            }
+            replace(try await api.cancel(appointmentID: appointment.id))
             errorMessage = nil
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    private func replace(_ updated: Appointment) {
+        if let index = appointments.firstIndex(where: { $0.id == updated.id }) {
+            appointments[index] = updated
         }
     }
 }
@@ -57,4 +77,6 @@ final class AppointmentsViewModel {
 extension Appointment {
     var canCancel: Bool { status != .cancelled }
     var canConfirm: Bool { status == .pending }
+    /// The backend only lets a student change the reason while the request is pending.
+    var canEditReason: Bool { status == .pending }
 }

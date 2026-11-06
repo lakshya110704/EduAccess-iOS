@@ -11,6 +11,7 @@ It has been run against a local copy of the backend, over HTTP and over HTTPS. I
 - Save and remove professors, and open a professor's cabin directions on the web app
 - Request a 15 or 30 minute appointment with a time, a reason and optional details. Times round up to the quarter hour, as the backend requires
 - List appointments and cancel one, with a confirmation first
+- Students edit the reason for a request while it is pending
 - Professors set their status with a note and a time they'll be back, and confirm or cancel requests. Confirming declines overlapping requests on the backend, and the list reloads to show that
 - Professors add and remove walk-in time for today
 - Availability and appointment lists refresh every 10 seconds while on screen, as the web app's dashboards do
@@ -104,7 +105,6 @@ Not yet run: a physical device, iPad, dark mode, VoiceOver, pull to refresh, tap
 
 Nothing in this section is built. The goal is full parity with the EduAccess web app:
 
-- Students edit the reason for a request while it is pending
 - Sign up in the app. Today that is on the web app only
 - Professors set their cabin in the app. This needs an API the backend does not have yet
 

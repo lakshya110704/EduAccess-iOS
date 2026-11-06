@@ -9,6 +9,7 @@ final class MockAPIClient: APIClient {
     var bookError: Error?
     var cancelResult: Result<Appointment, Error>?
     var confirmError: Error?
+    var updateReasonError: Error?
     var meResult: Result<Me, Error> = .success(.sample)
     var updateError: Error?
     var saveError: Error?
@@ -27,6 +28,7 @@ final class MockAPIClient: APIClient {
     private(set) var deletedOpenTimeIDs: [Int] = []
     private(set) var cancelledIDs: [Int] = []
     private(set) var confirmedIDs: [Int] = []
+    private(set) var reasonUpdates: [(id: Int, topic: Appointment.Topic, details: String)] = []
     private(set) var updates: [AvailabilityUpdate] = []
 
     func login(username: String, password: String, role: UserRole) async throws {
@@ -92,6 +94,12 @@ final class MockAPIClient: APIClient {
 
     func notifications() async throws -> [AppNotification] {
         try notificationsResult.get()
+    }
+
+    func updateReason(appointmentID: Int, topic: Appointment.Topic, details: String) async throws -> Appointment {
+        reasonUpdates.append((appointmentID, topic, details))
+        if let updateReasonError { throw updateReasonError }
+        return Appointment(id: appointmentID, studentName: "Riya Sharma", professorName: "Ashish Gupta", appointmentTime: Date(timeIntervalSince1970: 1_800_000_000), status: .pending, topic: topic, details: details)
     }
 
     func me() async throws -> Me {

@@ -106,6 +106,27 @@ final class LiveBackendTests: XCTestCase {
         _ = try await professor.cancel(appointmentID: request.id)
     }
 
+    func testStudentEditsReasonUntilTheProfessorConfirms() async throws {
+        let student = try await loggedIn("student2", as: .student)
+        let professor = try await loggedIn("prof2", as: .professor)
+        let professorID = try await student.searchProfessors("Iyer")[0].id
+        let request = try await student.book(BookingRequest(professor: professorID, appointmentTime: randomFutureSlot(), slots: 1, topic: .doubt, details: ""))
+
+        let edited = try await student.updateReason(appointmentID: request.id, topic: .marks, details: "Question 2")
+        XCTAssertEqual(edited.topic, .marks)
+        XCTAssertEqual(edited.details, "Question 2")
+        XCTAssertEqual(edited.status, .pending)
+
+        _ = try await professor.confirm(appointmentID: request.id)
+        do {
+            _ = try await student.updateReason(appointmentID: request.id, topic: .other, details: "")
+            XCTFail("Edited a confirmed request")
+        } catch {
+            XCTAssertEqual(error as? APIError, .server("The reason can only be changed while the request is pending."))
+        }
+        _ = try await professor.cancel(appointmentID: request.id)
+    }
+
     func testStudentSavesAndUnsavesAProfessor() async throws {
         let student = try await loggedIn("student2", as: .student)
         let professor = try await student.searchProfessors("Gupta")[0]

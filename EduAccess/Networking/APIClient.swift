@@ -9,6 +9,7 @@ protocol APIClient: Sendable {
     func book(_ request: BookingRequest) async throws -> Appointment
     func cancel(appointmentID: Int) async throws -> Appointment
     func confirm(appointmentID: Int) async throws -> Appointment
+    func updateReason(appointmentID: Int, topic: Appointment.Topic, details: String) async throws -> Appointment
     func setSaved(_ saved: Bool, professorID: Int) async throws -> Professor
     func openTimes() async throws -> [OpenTime]
     func addOpenTime(start: Date, end: Date) async throws -> OpenTime

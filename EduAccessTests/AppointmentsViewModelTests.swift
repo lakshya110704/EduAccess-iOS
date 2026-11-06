@@ -95,6 +95,41 @@ final class AppointmentsViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.appointments.first?.status, .pending)
     }
 
+    func testSaveReasonSendsTrimmedDetailsAndUpdatesTheRow() async {
+        let api = MockAPIClient()
+        api.appointmentsResult = .success([.sample(id: 1, status: .pending), .sample(id: 2, status: .pending)])
+        let viewModel = AppointmentsViewModel(api: api)
+        await viewModel.load()
+
+        let saved = await viewModel.saveReason(.sample(id: 2, status: .pending), topic: .marks, details: "  Question 2 ")
+
+        XCTAssertTrue(saved)
+        XCTAssertEqual(api.reasonUpdates.first?.details, "Question 2")
+        XCTAssertEqual(viewModel.appointments[1].topic, .marks)
+        XCTAssertEqual(viewModel.appointments[1].details, "Question 2")
+        XCTAssertEqual(viewModel.appointments[0].details, "")
+    }
+
+    func testSaveReasonRefusalReportsFailureAndKeepsTheRow() async {
+        let api = MockAPIClient()
+        api.appointmentsResult = .success([.sample(id: 1, status: .pending)])
+        api.updateReasonError = APIError.server("The reason can only be changed while the request is pending.")
+        let viewModel = AppointmentsViewModel(api: api)
+        await viewModel.load()
+
+        let saved = await viewModel.saveReason(.sample(id: 1, status: .pending), topic: .marks, details: "")
+
+        XCTAssertFalse(saved)
+        XCTAssertEqual(viewModel.appointments.first?.topic, .doubt)
+        XCTAssertEqual(viewModel.errorMessage, "The reason can only be changed while the request is pending.")
+    }
+
+    func testOnlyPendingReasonsCanBeEdited() {
+        XCTAssertTrue(Appointment.sample(id: 1, status: .pending).canEditReason)
+        XCTAssertFalse(Appointment.sample(id: 1, status: .confirmed).canEditReason)
+        XCTAssertFalse(Appointment.sample(id: 1, status: .cancelled).canEditReason)
+    }
+
     func testOnlyPendingAppointmentsCanBeConfirmed() {
         XCTAssertTrue(Appointment.sample(id: 1, status: .pending).canConfirm)
         XCTAssertFalse(Appointment.sample(id: 1, status: .confirmed).canConfirm)
