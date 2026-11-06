@@ -53,7 +53,7 @@ private struct RootView: View {
         case .professor:
             ProfessorHomeView(api: api, welcomeName: login.displayName, onLogout: logout)
         case nil:
-            LoginView(viewModel: login, signupURL: api.webURL("signup/"))
+            LoginView(viewModel: login, api: api)
         }
     }
 

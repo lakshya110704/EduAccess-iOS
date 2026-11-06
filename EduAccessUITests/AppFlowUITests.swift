@@ -54,6 +54,34 @@ final class AppFlowUITests: XCTestCase {
         XCTAssertTrue(tab.isSelected, "Tab \(name) did not open")
     }
 
+    /// Form rows off screen don't exist yet, so scroll until the field is there.
+    private func scrollTo(_ element: XCUIElement) {
+        for _ in 0..<8 where !element.isHittable {
+            app.collectionViews.firstMatch.swipeUp()
+        }
+    }
+
+    /// Scoped to the sheet's form, because the login screen behind it has fields with the same names.
+    private func fillSignup(_ name: String, email: String, password2: String) {
+        let form = app.collectionViews.firstMatch
+        XCTAssertTrue(form.textFields["College email (@muj.manipal.edu)"].waitForExistence(timeout: timeout))
+        type(name, into: form.textFields["Username"])
+        type("Test", into: form.textFields["First name"])
+        type("Student", into: form.textFields["Last name"])
+        type(email, into: form.textFields["College email (@muj.manipal.edu)"])
+        scrollTo(form.textFields["Roll number"])
+        type(name.uppercased(), into: form.textFields["Roll number"])
+        scrollTo(form.secureTextFields["Password"])
+        type("Tr1cky-pass-77", into: form.secureTextFields["Password"])
+        scrollTo(form.secureTextFields["Re-enter password"])
+        type(password2, into: form.secureTextFields["Re-enter password"])
+    }
+
+    private func tapRequestAccount() {
+        scrollTo(app.buttons["Request Account"])
+        app.buttons["Request Account"].tap()
+    }
+
     /// Opens a Form picker's menu and picks the option that starts with the given text.
     private func choose(_ option: String, in picker: String) {
         let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", picker)).firstMatch
@@ -199,10 +227,39 @@ final class AppFlowUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Log In"].waitForExistence(timeout: timeout))
     }
 
+    func testSigningUpShowsAllErrorsThenWaitsForApproval() {
+        let signUp = app.buttons["New to EduAccess? Create an account"]
+        let name = "t\(Int.random(in: 100_000...999_999))"
+
+        // A wrong email domain and mismatched passwords: both messages show.
+        tapUntil(signUp, reveals: app.buttons["Request Account"])
+        fillSignup(name, email: "\(name)@example.test", password2: "different")
+        tapRequestAccount()
+        waitForText(containing: "must register with their")
+        waitForText(containing: "didn’t match")
+        attachScreenshot("signup-errors")
+        app.buttons["Close"].tap()
+        XCTAssertTrue(app.buttons["Request Account"].waitForNonExistence(timeout: timeout))
+
+        tapUntil(signUp, reveals: app.buttons["Request Account"])
+        attachScreenshot("signup-form")
+        fillSignup(name, email: "\(name)@muj.manipal.edu", password2: "Tr1cky-pass-77")
+        tapRequestAccount()
+        waitForText(containing: "waiting for an admin to activate it")
+        attachScreenshot("signup-received")
+        XCTAssertFalse(app.tabBars.firstMatch.exists, "Sign-up must not log the user in")
+        app.buttons["Back to Login"].tap()
+        XCTAssertTrue(app.buttons["Back to Login"].waitForNonExistence(timeout: timeout))
+
+        // The new account can't log in until an admin activates it.
+        password = "Tr1cky-pass-77"
+        logIn(name, role: "Student")
+        waitForText(containing: "or is not active yet")
+    }
+
     func testWrongRoleShowsAnError() {
         logIn("student1", role: "Professor")
         waitForText(containing: "does not match the selected role")
-        XCTAssertTrue(app.links["New to EduAccess? Create an account"].exists || app.buttons["New to EduAccess? Create an account"].exists)
         attachScreenshot("wrong-role")
     }
 }

@@ -13,6 +13,8 @@ final class MockAPIClient: APIClient {
     var meResult: Result<Me, Error> = .success(.sample)
     var updateError: Error?
     var saveError: Error?
+    var signupOptionsResult: Result<SignupOptions, Error> = .success(SignupOptions(emailDomains: [:]))
+    var signupError: Error?
     var campusBlocksResult: Result<[CampusBlock], Error> = .success([])
     var setCabinError: Error?
     var notificationsResult: Result<[AppNotification], Error> = .success([])
@@ -33,6 +35,7 @@ final class MockAPIClient: APIClient {
     private(set) var reasonUpdates: [(id: Int, topic: Appointment.Topic, details: String)] = []
     private(set) var updates: [AvailabilityUpdate] = []
     private(set) var cabinRequests: [CabinRequest] = []
+    private(set) var signups: [SignupRequest] = []
 
     func login(username: String, password: String, role: UserRole) async throws {
         loginCalls.append((username, password, role))
@@ -103,6 +106,16 @@ final class MockAPIClient: APIClient {
         reasonUpdates.append((appointmentID, topic, details))
         if let updateReasonError { throw updateReasonError }
         return Appointment(id: appointmentID, studentName: "Riya Sharma", professorName: "Ashish Gupta", appointmentTime: Date(timeIntervalSince1970: 1_800_000_000), endTime: Date(timeIntervalSince1970: 1_800_000_900), status: .pending, topic: topic, details: details)
+    }
+
+    func signupOptions() async throws -> SignupOptions {
+        try signupOptionsResult.get()
+    }
+
+    func signup(_ request: SignupRequest) async throws -> SignupResult {
+        signups.append(request)
+        if let signupError { throw signupError }
+        return SignupResult(username: request.username, isActive: false)
     }
 
     func campusBlocks() async throws -> [CampusBlock] {

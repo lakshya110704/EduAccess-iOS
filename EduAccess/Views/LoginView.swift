@@ -2,7 +2,8 @@ import SwiftUI
 
 struct LoginView: View {
     @Bindable var viewModel: LoginViewModel
-    let signupURL: URL
+    let api: any APIClient
+    @State private var isSigningUp = false
 
     var body: some View {
         ScrollView {
@@ -49,13 +50,15 @@ struct LoginView: View {
                 .controlSize(.large)
                 .disabled(!viewModel.canSubmit)
 
-                // The backend has no sign-up API yet, so this opens the website's form.
-                Link("New to EduAccess? Create an account", destination: signupURL)
+                Button("New to EduAccess? Create an account") { isSigningUp = true }
                     .font(.footnote)
             }
             .padding(24)
             .frame(maxWidth: 480)
             .frame(maxWidth: .infinity)
+        }
+        .sheet(isPresented: $isSigningUp) {
+            SignupView(api: api, role: viewModel.role)
         }
     }
 }

@@ -197,6 +197,52 @@ final class LiveBackendTests: XCTestCase {
         }
     }
 
+    private func signupRequest(_ name: String, email: String? = nil, password2: String = "Tr1cky-pass-77") -> SignupRequest {
+        SignupRequest(role: .student, username: name, firstName: "Test", middleName: "", lastName: "Student", email: email ?? "\(name)@muj.manipal.edu", collegeId: name.uppercased(), password1: "Tr1cky-pass-77", password2: password2)
+    }
+
+    func testSignupCreatesAnAccountThatCannotLogInYet() async throws {
+        let client = LiveAPIClient()
+        let name = "t\(Int.random(in: 100_000...999_999))"
+
+        let result = try await client.signup(signupRequest(name))
+        XCTAssertEqual(result, SignupResult(username: name, isActive: false))
+
+        do {
+            try await LiveAPIClient().login(username: name, password: "Tr1cky-pass-77", role: .student)
+            XCTFail("Logged in before an admin activated the account")
+        } catch {
+            XCTAssertEqual(error as? APIError, .roleMismatch)
+        }
+    }
+
+    func testSignupOptionsGiveADomainForEachRole() async throws {
+        let options = try await LiveAPIClient().signupOptions()
+        XCTAssertNotNil(options.emailDomains["student"])
+        XCTAssertNotNil(options.emailDomains["professor"])
+    }
+
+    func testSignupReportsEveryBadFieldTogether() async throws {
+        do {
+            _ = try await LiveAPIClient().signup(signupRequest("t\(Int.random(in: 100_000...999_999))", email: "someone@example.test", password2: "different"))
+            XCTFail("Signed up with bad fields")
+        } catch APIError.validation(let errors) {
+            XCTAssertEqual(errors["email"]?.count, 1)
+            XCTAssertEqual(errors["password2"]?.count, 1)
+        }
+    }
+
+    func testSignupWhileLoggedInIsRefused() async throws {
+        let client = try await loggedIn("student2", as: .student)
+
+        do {
+            _ = try await client.signup(signupRequest("t\(Int.random(in: 100_000...999_999))"))
+            XCTFail("Signed up while logged in")
+        } catch {
+            XCTAssertEqual(error as? APIError, .server("You are already logged in."))
+        }
+    }
+
     func testReadAfterLogoutReportsTheSessionEnded() async throws {
         let client = try await loggedIn("student2", as: .student)
         try await client.logout()

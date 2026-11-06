@@ -14,10 +14,10 @@ It has been run against a local copy of the backend, over HTTP and over HTTPS. I
 - Students edit the reason for a request while it is pending
 - Professors set their status with a note and a time they'll be back, and confirm or cancel requests. Confirming declines overlapping requests on the backend, and the list reloads to show that
 - Professors add and remove walk-in time for today
-- Professors set and change their cabin. Without one, they must set it before anything else, as on the website. This needs a backend version that is not deployed yet
+- Professors set and change their cabin. Without one, they must set it before anything else, as on the website
 - Availability and appointment lists refresh every 10 seconds while on screen, as the web app's dashboards do
 - Notifications list for both roles, refreshed with the other lists
-- A link from the login screen to the website's account request form
+- Request an account from the login screen. It shows every field's errors, and says the account waits for an admin to activate it. It does not log the user in
 - Stay logged in between launches, with a welcome line showing the user's name
 - Return to login with a message when the backend says the session has ended
 - Show the backend's own error message when it refuses a request
@@ -52,7 +52,11 @@ export DB_ENGINE=sqlite DJANGO_DEBUG=True
 .venv/bin/python manage.py runserver 127.0.0.1:8000
 ```
 
-`seed_demo` creates demo students and professors. Its password is in `api/management/commands/seed_demo.py` in the backend.
+`seed_demo` creates demo students and professors. Its password is in `api/management/commands/seed_demo.py` in the backend. Sign-up and setting a cabin need backend commit `b9a5f97` or later, which is not on GitHub yet. To add the campus blocks and cabin-less professors they need, run this from the backend checkout:
+
+```bash
+.venv/bin/python manage.py shell < path/to/EduAccess-iOS/scripts/local_test_fixtures.py
+```
 
 Then open `EduAccess.xcodeproj` in Xcode and run the `EduAccess` scheme on an iOS 18 simulator. `seed_demo` creates accounts for both roles: `student1`, `student2`, `prof1` and `prof2`. A new student has no saved professors, so search for one (for example `AB2` or `gupta`) and tap its star.
 
@@ -103,17 +107,14 @@ Not yet run: a physical device, iPad, dark mode, VoiceOver, pull to refresh, tap
 
 ## Limitations
 
+- **Sign-up and setting a cabin need a backend version that is not deployed yet.** They use `/api/signup/`, `/api/signup/options/`, `/api/campus-blocks/` and `/api/me/cabin/`, tested only against a local copy of backend commit `b9a5f97`. Against an older backend both fail, and a professor with no cabin can't get past the cabin screen in the app until the backend is updated. Until then this app does not have full parity with the deployed website
 - Plain HTTP only works for local addresses. Anything else needs HTTPS
 - The backend has no JSON login endpoint, so the app posts its HTML login form. That form's wrong-role and awaiting-approval messages are only in its HTML, so the app shows one shared message for both
 - Cabin directions open the website's page, which has the Maps link, 360 view, written steps and WhatsApp share. The backend has no API for a native screen
 
 ## Roadmap
 
-Nothing in this section is built. The goal is full parity with the EduAccess website:
-
-- Sign up in the app. This needs an API the backend does not have yet. Today the login screen links to the website's form
-
-Not on the website, and also not built:
+Nothing in this section is built:
 
 - Push notifications. The in-app list is what the website has. Push would need a paid Apple Developer account and backend work
 

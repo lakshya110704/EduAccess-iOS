@@ -15,6 +15,8 @@ protocol APIClient: Sendable {
     func addOpenTime(start: Date, end: Date) async throws -> OpenTime
     func deleteOpenTime(id: Int) async throws
     func notifications() async throws -> [AppNotification]
+    func signupOptions() async throws -> SignupOptions
+    func signup(_ request: SignupRequest) async throws -> SignupResult
     func campusBlocks() async throws -> [CampusBlock]
     func setCabin(_ request: CabinRequest) async throws -> Me
     func me() async throws -> Me

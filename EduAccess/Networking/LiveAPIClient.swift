@@ -102,6 +102,16 @@ struct LiveAPIClient: APIClient {
         try await send(URLRequest(url: url("api/notifications/")))
     }
 
+    func signupOptions() async throws -> SignupOptions {
+        try await send(URLRequest(url: url("api/signup/options/")))
+    }
+
+    /// Sign-up checks CSRF even though nobody is logged in, so this gets the cookie first, as login does.
+    func signup(_ request: SignupRequest) async throws -> SignupResult {
+        _ = try await session.data(from: url("login/"))
+        return try await send(write("POST", url("api/signup/"), request), keepingFieldErrors: true)
+    }
+
     func campusBlocks() async throws -> [CampusBlock] {
         try await send(URLRequest(url: url("api/campus-blocks/")))
     }

@@ -200,6 +200,26 @@ final class LiveAPIClientTests: XCTestCase {
         XCTAssertEqual(APIError.validation(body: body), .server("You are already logged in."))
     }
 
+    func testSignupBodyUsesBackendFieldNames() throws {
+        let request = SignupRequest(role: .student, username: "riya", firstName: "Riya", middleName: "", lastName: "Sharma", email: "r@college.test", collegeId: "2301", password1: "one", password2: "two")
+
+        let data = try LiveAPIClient.encoder.encode(request)
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: String])
+
+        XCTAssertEqual(json, [
+            "role": "student", "username": "riya", "first_name": "Riya", "middle_name": "", "last_name": "Sharma",
+            "email": "r@college.test", "college_id": "2301", "password1": "one", "password2": "two",
+        ])
+    }
+
+    func testDecodesSignupResponses() throws {
+        let result = try LiveAPIClient.decoder.decode(SignupResult.self, from: Data(#"{"username":"riya","is_active":false}"#.utf8))
+        XCTAssertFalse(result.isActive)
+
+        let options = try LiveAPIClient.decoder.decode(SignupOptions.self, from: Data(#"{"email_domains":{"student":"muj.manipal.edu","professor":"jaipur.manipal.edu"}}"#.utf8))
+        XCTAssertEqual(options.emailDomains["professor"], "jaipur.manipal.edu")
+    }
+
     func testReadsDetailError() {
         let body = Data(#"{"detail":"Type at least 2 characters to search."}"#.utf8)
         XCTAssertEqual(APIError.server(body: body), .server("Type at least 2 characters to search."))
