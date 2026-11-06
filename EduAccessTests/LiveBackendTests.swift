@@ -90,6 +90,22 @@ final class LiveBackendTests: XCTestCase {
         _ = try await professor.cancel(appointmentID: request.id)
     }
 
+    func testBothSidesGetNotificationsAboutARequest() async throws {
+        let student = try await loggedIn("student2", as: .student)
+        let professor = try await loggedIn("prof2", as: .professor)
+        let professorID = try await student.searchProfessors("Iyer")[0].id
+        let request = try await student.book(BookingRequest(professor: professorID, appointmentTime: randomFutureSlot(), slots: 1, topic: .doubt, details: ""))
+
+        let toProfessor = try await professor.notifications()
+        XCTAssertTrue(toProfessor.first?.message.contains("New appointment request") == true)
+
+        _ = try await professor.confirm(appointmentID: request.id)
+        let toStudent = try await student.notifications()
+        XCTAssertTrue(toStudent.first?.message.contains("now Confirmed") == true)
+
+        _ = try await professor.cancel(appointmentID: request.id)
+    }
+
     func testStudentSavesAndUnsavesAProfessor() async throws {
         let student = try await loggedIn("student2", as: .student)
         let professor = try await student.searchProfessors("Gupta")[0]

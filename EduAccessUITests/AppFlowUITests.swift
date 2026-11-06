@@ -24,15 +24,23 @@ final class AppFlowUITests: XCTestCase {
         add(attachment)
     }
 
+    /// Under load a field can take a while to get focus after a tap, and typing before then fails.
+    private func type(_ text: String, into field: XCUIElement) {
+        let focused = NSPredicate(format: "hasKeyboardFocus == true")
+        for _ in 0..<5 where !focused.evaluate(with: field) {
+            field.tap()
+            _ = XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: focused, object: field)], timeout: 10)
+        }
+        field.typeText(text)
+    }
+
     private func logIn(_ username: String, role: String) {
         XCTAssertTrue(app.buttons[role].waitForExistence(timeout: timeout))
         app.buttons[role].tap()
         let usernameField = app.textFields["Username"]
-        usernameField.tap()
-        usernameField.typeText(username)
+        type(username, into: usernameField)
         let passwordField = app.secureTextFields["Password"]
-        passwordField.tap()
-        passwordField.typeText(password)
+        type(password, into: passwordField)
         app.buttons["Log In"].tap()
     }
 
@@ -59,8 +67,7 @@ final class AppFlowUITests: XCTestCase {
         logIn("student1", role: "Student")
         let search = app.searchFields.firstMatch
         XCTAssertTrue(search.waitForExistence(timeout: timeout))
-        search.tap()
-        search.typeText("AB2")
+        type("AB2", into: search)
         waitForText(containing: "Ashish Gupta")
         XCTAssertTrue(app.buttons["Save Ashish Gupta"].waitForExistence(timeout: timeout))
         app.buttons["Save Ashish Gupta"].tap()
@@ -94,8 +101,7 @@ final class AppFlowUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Update Status"].waitForExistence(timeout: timeout))
         app.buttons["Busy"].tap()
         XCTAssertTrue(app.textFields["Add a short note (optional)"].waitForExistence(timeout: timeout))
-        app.textFields["Add a short note (optional)"].tap()
-        app.textFields["Add a short note (optional)"].typeText("Back soon\n")
+        type("Back soon\n", into: app.textFields["Add a short note (optional)"])
         app.buttons["Update Status"].tap()
         waitForText(containing: "Status updated")
         attachScreenshot("professor-status")
@@ -122,6 +128,10 @@ final class AppFlowUITests: XCTestCase {
         let confirmed = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "· Confirmed")).firstMatch
         expectation(for: confirmedGone, evaluatedWith: confirmed)
         waitForExpectations(timeout: timeout)
+
+        openTab("Notifications")
+        waitForText(containing: "New appointment request")
+        attachScreenshot("professor-notifications")
 
         openTab("Walk-In")
         XCTAssertTrue(app.buttons["Add Walk-In Time"].waitForExistence(timeout: timeout))

@@ -13,6 +13,7 @@ protocol APIClient: Sendable {
     func openTimes() async throws -> [OpenTime]
     func addOpenTime(start: Date, end: Date) async throws -> OpenTime
     func deleteOpenTime(id: Int) async throws
+    func notifications() async throws -> [AppNotification]
     func me() async throws -> Me
     func updateAvailability(_ update: AvailabilityUpdate) async throws -> Me
     /// A page of the web app, for the things only it can do.

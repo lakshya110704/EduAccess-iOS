@@ -14,6 +14,7 @@ It has been run against a local copy of the backend, over HTTP and over HTTPS. I
 - Professors set their status with a note and a time they'll be back, and confirm or cancel requests. Confirming declines overlapping requests on the backend, and the list reloads to show that
 - Professors add and remove walk-in time for today
 - Availability and appointment lists refresh every 10 seconds while on screen, as the web app's dashboards do
+- Notifications list for both roles, refreshed with the other lists
 - Show the backend's own error message when it refuses a request
 
 ## How it is built
@@ -103,7 +104,6 @@ Not yet run: a physical device, iPad, dark mode, VoiceOver, pull to refresh, tap
 
 Nothing in this section is built. The goal is full parity with the EduAccess web app:
 
-- Notifications
 - Students edit the reason for a request while it is pending
 - Sign up in the app. Today that is on the web app only
 - Professors set their cabin in the app. This needs an API the backend does not have yet

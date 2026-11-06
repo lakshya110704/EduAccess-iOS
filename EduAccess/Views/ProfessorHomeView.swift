@@ -12,6 +12,8 @@ struct ProfessorHomeView: View {
                 .tabItem { Label("Requests", systemImage: "calendar") }
             OpenTimeView(api: api)
                 .tabItem { Label("Walk-In", systemImage: "door.left.hand.open") }
+            NotificationsView(api: api)
+                .tabItem { Label("Notifications", systemImage: "bell") }
         }
     }
 }

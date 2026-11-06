@@ -83,6 +83,10 @@ struct LiveAPIClient: APIClient {
         try await setStatus(.confirmed, appointmentID: appointmentID)
     }
 
+    func notifications() async throws -> [AppNotification] {
+        try await send(URLRequest(url: url("api/notifications/")))
+    }
+
     func me() async throws -> Me {
         try await send(URLRequest(url: url("api/me/")))
     }

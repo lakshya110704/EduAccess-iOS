@@ -12,6 +12,7 @@ final class MockAPIClient: APIClient {
     var meResult: Result<Me, Error> = .success(.sample)
     var updateError: Error?
     var saveError: Error?
+    var notificationsResult: Result<[AppNotification], Error> = .success([])
     var openTimesResult: Result<[OpenTime], Error> = .success([])
     var addOpenTimeError: Error?
     var deleteOpenTimeError: Error?
@@ -87,6 +88,10 @@ final class MockAPIClient: APIClient {
     func deleteOpenTime(id: Int) async throws {
         deletedOpenTimeIDs.append(id)
         if let deleteOpenTimeError { throw deleteOpenTimeError }
+    }
+
+    func notifications() async throws -> [AppNotification] {
+        try notificationsResult.get()
     }
 
     func me() async throws -> Me {

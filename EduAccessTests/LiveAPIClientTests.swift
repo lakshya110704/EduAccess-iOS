@@ -72,6 +72,14 @@ final class LiveAPIClientTests: XCTestCase {
         XCTAssertEqual(note.until?.timeIntervalSince1970 ?? 0, ISO8601DateFormatter().date(from: "2026-11-06T20:00:00Z")!.timeIntervalSince1970 + 0.25, accuracy: 0.001)
     }
 
+    func testDecodesNotificationWithFractionalSeconds() throws {
+        let json = #"[{"id":1,"message":"New appointment request","sent_at":"2026-11-06T03:27:10.123456+05:30"}]"#
+
+        let notifications = try LiveAPIClient.decoder.decode([AppNotification].self, from: Data(json.utf8))
+
+        XCTAssertEqual(notifications.first?.message, "New appointment request")
+    }
+
     func testDecodesMe() throws {
         let json = #"{"id":3,"username":"prof1","display_name":"Ashish Gupta","role":"professor","availability_status":"Busy","status_note":{"pick":"In class","text":"Back soon","until":null},"cabin_label":"AB2 FB3 : 106"}"#
 

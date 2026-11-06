@@ -28,6 +28,8 @@ private struct RootView: View {
                     .tabItem { Label("Professors", systemImage: "person.2") }
                 AppointmentsView(api: api, role: .student)
                     .tabItem { Label("Appointments", systemImage: "calendar") }
+                NotificationsView(api: api)
+                    .tabItem { Label("Notifications", systemImage: "bell") }
             }
         case .professor:
             ProfessorHomeView(api: api, onLogout: logout)
