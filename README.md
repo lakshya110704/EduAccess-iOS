@@ -16,6 +16,7 @@ It has been run against a local copy of the backend, over HTTP and over HTTPS. I
 - Professors add and remove walk-in time for today
 - Availability and appointment lists refresh every 10 seconds while on screen, as the web app's dashboards do
 - Notifications list for both roles, refreshed with the other lists
+- A link from the login screen to the website's account request form
 - Stay logged in between launches, with a welcome line showing the user's name
 - Return to login with a message when the backend says the session has ended
 - Show the backend's own error message when it refuses a request
@@ -107,7 +108,7 @@ Not yet run: a physical device, iPad, dark mode, VoiceOver, pull to refresh, tap
 
 Nothing in this section is built. The goal is full parity with the EduAccess web app:
 
-- Sign up in the app. Today that is on the web app only
+- Sign up in the app. This needs an API the backend does not have yet. Today the login screen links to the website's form
 - Professors set their cabin in the app. This needs an API the backend does not have yet
 
 ## Contributors

@@ -163,6 +163,7 @@ final class AppFlowUITests: XCTestCase {
     func testWrongRoleShowsAnError() {
         logIn("student1", role: "Professor")
         waitForText(containing: "does not match the selected role")
+        XCTAssertTrue(app.links["New to EduAccess? Create an account"].exists || app.buttons["New to EduAccess? Create an account"].exists)
         attachScreenshot("wrong-role")
     }
 }

@@ -38,7 +38,7 @@ struct ProfessorsView: View {
                     Button("Log Out", action: onLogout)
                 }
             }
-            .searchable(text: $viewModel.query, prompt: "Search name, cabin or block")
+            .searchable(text: $viewModel.query, prompt: "Name, cabin or employee ID")
             .autocorrectionDisabled()
             .refreshable { await viewModel.load() }
             .task(id: viewModel.query) {

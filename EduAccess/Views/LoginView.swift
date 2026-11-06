@@ -2,6 +2,7 @@ import SwiftUI
 
 struct LoginView: View {
     @Bindable var viewModel: LoginViewModel
+    let signupURL: URL
 
     var body: some View {
         ScrollView {
@@ -47,6 +48,10 @@ struct LoginView: View {
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
                 .disabled(!viewModel.canSubmit)
+
+                // The backend has no sign-up API yet, so this opens the website's form.
+                Link("New to EduAccess? Create an account", destination: signupURL)
+                    .font(.footnote)
             }
             .padding(24)
             .frame(maxWidth: 480)
