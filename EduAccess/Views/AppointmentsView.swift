@@ -49,7 +49,7 @@ struct AppointmentsView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(otherPerson(appointment))
                     .font(.headline)
-                Text(appointment.appointmentTime.formatted(date: .abbreviated, time: .shortened))
+                Text(appointment.timeRange)
                 Text("\(appointment.topic.rawValue) · \(appointment.status.rawValue)")
                     .foregroundStyle(.secondary)
                 if !appointment.details.isEmpty {

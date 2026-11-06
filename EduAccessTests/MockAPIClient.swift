@@ -99,7 +99,7 @@ final class MockAPIClient: APIClient {
     func updateReason(appointmentID: Int, topic: Appointment.Topic, details: String) async throws -> Appointment {
         reasonUpdates.append((appointmentID, topic, details))
         if let updateReasonError { throw updateReasonError }
-        return Appointment(id: appointmentID, studentName: "Riya Sharma", professorName: "Ashish Gupta", appointmentTime: Date(timeIntervalSince1970: 1_800_000_000), status: .pending, topic: topic, details: details)
+        return Appointment(id: appointmentID, studentName: "Riya Sharma", professorName: "Ashish Gupta", appointmentTime: Date(timeIntervalSince1970: 1_800_000_000), endTime: Date(timeIntervalSince1970: 1_800_000_900), status: .pending, topic: topic, details: details)
     }
 
     func me() async throws -> Me {
@@ -145,6 +145,6 @@ extension Me {
 
 extension Appointment {
     static func sample(id: Int, status: Status) -> Appointment {
-        Appointment(id: id, studentName: "Riya Sharma", professorName: "Ashish Gupta", appointmentTime: Date(timeIntervalSince1970: 1_800_000_000), status: status, topic: .doubt, details: "")
+        Appointment(id: id, studentName: "Riya Sharma", professorName: "Ashish Gupta", appointmentTime: Date(timeIntervalSince1970: 1_800_000_000), endTime: Date(timeIntervalSince1970: 1_800_000_900), status: status, topic: .doubt, details: "")
     }
 }

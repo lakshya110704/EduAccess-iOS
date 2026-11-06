@@ -10,7 +10,7 @@ It has been run against a local copy of the backend, over HTTP and over HTTPS. I
 - List the student's saved professors, or search all professors, with status (Free, Busy, Unavailable), the professor's note, cabin and today's walk-in hours
 - Save and remove professors, and open a professor's cabin directions on the web app
 - Request a 15 or 30 minute appointment with a time, a reason and optional details. Times round up to the quarter hour, as the backend requires
-- List appointments and cancel one, with a confirmation first
+- List appointments with their start and end times, and cancel one, with a confirmation first
 - Students edit the reason for a request while it is pending
 - Professors set their status with a note and a time they'll be back, and confirm or cancel requests. Confirming declines overlapping requests on the backend, and the list reloads to show that
 - Professors add and remove walk-in time for today

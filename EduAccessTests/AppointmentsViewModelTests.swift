@@ -124,6 +124,13 @@ final class AppointmentsViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.errorMessage, "The reason can only be changed while the request is pending.")
     }
 
+    func testTimeRangeShowsTheStartDateAndBothTimes() {
+        let appointment = Appointment.sample(id: 1, status: .pending)
+
+        XCTAssertTrue(appointment.timeRange.hasPrefix(appointment.appointmentTime.formatted(date: .abbreviated, time: .shortened)))
+        XCTAssertTrue(appointment.timeRange.hasSuffix(" to \(appointment.endTime.formatted(date: .omitted, time: .shortened))"))
+    }
+
     func testOnlyPendingReasonsCanBeEdited() {
         XCTAssertTrue(Appointment.sample(id: 1, status: .pending).canEditReason)
         XCTAssertFalse(Appointment.sample(id: 1, status: .confirmed).canEditReason)

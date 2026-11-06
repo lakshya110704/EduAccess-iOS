@@ -30,7 +30,13 @@ struct Appointment: Codable, Identifiable, Equatable {
     let studentName: String
     let professorName: String
     let appointmentTime: Date
+    let endTime: Date
     let status: Status
     let topic: Topic
     let details: String
+
+    /// For example "Nov 7, 2026 at 15:30 to 16:00", so a 30 minute booking looks different from a 15 minute one.
+    var timeRange: String {
+        "\(appointmentTime.formatted(date: .abbreviated, time: .shortened)) to \(endTime.formatted(date: .omitted, time: .shortened))"
+    }
 }

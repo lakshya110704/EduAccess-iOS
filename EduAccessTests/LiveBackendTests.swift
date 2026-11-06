@@ -57,6 +57,7 @@ final class LiveBackendTests: XCTestCase {
         let first = try await student1.book(BookingRequest(professor: professorID, appointmentTime: time, slots: 2, topic: .doubt, details: "Chapter 3"))
         let second = try await student2.book(BookingRequest(professor: professorID, appointmentTime: time, slots: 1, topic: .marks, details: ""))
         XCTAssertEqual(first.details, "Chapter 3")
+        XCTAssertEqual(first.endTime, time.addingTimeInterval(30 * 60))
         XCTAssertEqual(first.status, .pending)
 
         let confirmed = try await professor.confirm(appointmentID: first.id)

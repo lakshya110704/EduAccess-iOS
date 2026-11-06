@@ -62,6 +62,7 @@ final class LiveAPIClientTests: XCTestCase {
         XCTAssertEqual(appointment.status, .pending)
         XCTAssertEqual(appointment.topic, .doubt)
         XCTAssertEqual(appointment.appointmentTime, ISO8601DateFormatter().date(from: "2026-11-06T20:00:00Z"))
+        XCTAssertEqual(appointment.endTime, ISO8601DateFormatter().date(from: "2026-11-06T20:15:00Z"))
     }
 
     func testDecodesDatesWithFractionalSeconds() throws {
