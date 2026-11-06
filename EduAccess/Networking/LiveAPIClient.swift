@@ -102,6 +102,14 @@ struct LiveAPIClient: APIClient {
         try await send(URLRequest(url: url("api/notifications/")))
     }
 
+    func campusBlocks() async throws -> [CampusBlock] {
+        try await send(URLRequest(url: url("api/campus-blocks/")))
+    }
+
+    func setCabin(_ request: CabinRequest) async throws -> Me {
+        try await send(write("PUT", url("api/me/cabin/"), request), keepingFieldErrors: true)
+    }
+
     func me() async throws -> Me {
         try await send(URLRequest(url: url("api/me/")))
     }
@@ -208,7 +216,7 @@ struct LiveAPIClient: APIClient {
         (response as? HTTPURLResponse)?.statusCode
     }
 
-    private func send<T: Decodable>(_ request: URLRequest) async throws -> T {
+    private func send<T: Decodable>(_ request: URLRequest, keepingFieldErrors: Bool = false) async throws -> T {
         let (body, response) = try await session.data(for: request)
         guard let status = (response as? HTTPURLResponse)?.statusCode, 200..<300 ~= status else {
             // Django answers 403 when the session is gone. On a write a 403 can mean other things, such as
@@ -217,7 +225,7 @@ struct LiveAPIClient: APIClient {
                 NotificationCenter.default.post(name: .sessionExpired, object: nil)
                 throw APIError.sessionExpired
             }
-            throw APIError.server(body: body)
+            throw keepingFieldErrors && status(of: response) == 400 ? APIError.validation(body: body) : APIError.server(body: body)
         }
         return try Self.decoder.decode(T.self, from: body)
     }

@@ -172,6 +172,34 @@ final class LiveAPIClientTests: XCTestCase {
         await fulfillment(of: [posted], timeout: 0.5)
     }
 
+    func testDecodesCampusBlocksWithAnEmptyFloorLabel() throws {
+        let json = #"[{"id":2,"number":2,"name":"Academic Block 2","faculty_blocks":[{"id":2,"number":3,"floor_label":"Floor 1"},{"id":3,"number":4,"floor_label":""}]}]"#
+
+        let blocks = try LiveAPIClient.decoder.decode([CampusBlock].self, from: Data(json.utf8))
+
+        XCTAssertEqual(blocks.first?.name, "Academic Block 2")
+        XCTAssertEqual(blocks.first?.facultyBlocks.map(\.title), ["Faculty Block 3, Floor 1", "Faculty Block 4"])
+    }
+
+    func testCabinBodyLeavesOutBlocksNotChosenYet() throws {
+        let data = try LiveAPIClient.encoder.encode(CabinRequest(academicBlock: 4, facultyBlock: nil, cabin: "106"))
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+        XCTAssertEqual(json["academic_block"] as? Int, 4)
+        XCTAssertNil(json["faculty_block"])
+        XCTAssertEqual(json["cabin"] as? String, "106")
+    }
+
+    func testValidationKeepsEveryFieldAndMessage() {
+        let body = Data(#"{"cabin":["One.","Two."],"faculty_block":["Three."]}"#.utf8)
+        XCTAssertEqual(APIError.validation(body: body), .validation(["cabin": ["One.", "Two."], "faculty_block": ["Three."]]))
+    }
+
+    func testValidationFallsBackForADetailBody() {
+        let body = Data(#"{"detail":"You are already logged in."}"#.utf8)
+        XCTAssertEqual(APIError.validation(body: body), .server("You are already logged in."))
+    }
+
     func testReadsDetailError() {
         let body = Data(#"{"detail":"Type at least 2 characters to search."}"#.utf8)
         XCTAssertEqual(APIError.server(body: body), .server("Type at least 2 characters to search."))

@@ -38,6 +38,10 @@ final class ProfessorStatusViewModel {
         }
     }
 
+    func cabinChanged(to label: String) {
+        cabinLabel = label
+    }
+
     func save() async {
         guard !isSaving else { return }
         isSaving = true

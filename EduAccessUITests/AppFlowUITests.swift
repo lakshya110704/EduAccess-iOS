@@ -54,6 +54,16 @@ final class AppFlowUITests: XCTestCase {
         XCTAssertTrue(tab.isSelected, "Tab \(name) did not open")
     }
 
+    /// Opens a Form picker's menu and picks the option that starts with the given text.
+    private func choose(_ option: String, in picker: String) {
+        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", picker)).firstMatch
+        let item = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", option)).firstMatch
+        tapUntil(row, reveals: item)
+        item.tap()
+        let picked = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(picker), \(option)")).firstMatch
+        XCTAssertTrue(picked.waitForExistence(timeout: timeout), "\(picker) did not change to \(option)")
+    }
+
     private func tapUntil(_ element: XCUIElement, reveals next: XCUIElement) {
         XCTAssertTrue(element.waitForExistence(timeout: timeout))
         for _ in 0..<4 where !next.exists {
@@ -156,6 +166,35 @@ final class AppFlowUITests: XCTestCase {
         app.buttons["Free"].tap()
         app.buttons["Update Status"].tap()
         waitForText(containing: "Status updated")
+        app.buttons["Log Out"].tap()
+        XCTAssertTrue(app.buttons["Log In"].waitForExistence(timeout: timeout))
+    }
+
+    /// Needs scripts/local_test_fixtures.py, which also clears this account's cabin for the next run.
+    func testProfessorWithNoCabinSetsOneBeforeAnythingElse() throws {
+        logIn("nocabin2", role: "Professor")
+        let saveCabin = app.buttons["Save Cabin"]
+        XCTAssertTrue(saveCabin.waitForExistence(timeout: timeout), "No cabin gate. Run scripts/local_test_fixtures.py")
+        XCTAssertFalse(app.tabBars.buttons["My Status"].exists)
+        attachScreenshot("cabin-first-time")
+
+        // Nothing chosen: the backend's messages appear, one per field.
+        saveCabin.tap()
+        waitForText(containing: "This field is required")
+        attachScreenshot("cabin-errors")
+
+        choose("Academic Block 2", in: "Academic block")
+        choose("Faculty Block 3", in: "Faculty block")
+        type("g-12", into: app.textFields["Cabin number"])
+        tapUntil(app.buttons["Save Cabin"], reveals: app.buttons["Update Status"])
+        waitForText(containing: "AB2 FB3 : G-12")
+        attachScreenshot("cabin-saved")
+
+        tapUntil(app.buttons["Change Cabin"], reveals: app.buttons["Save Cabin"])
+        waitForText(containing: "Currently AB2 FB3 : G-12")
+        attachScreenshot("cabin-change")
+        app.buttons["Close"].tap()
+        XCTAssertTrue(app.buttons["Log Out"].waitForExistence(timeout: timeout))
         app.buttons["Log Out"].tap()
         XCTAssertTrue(app.buttons["Log In"].waitForExistence(timeout: timeout))
     }

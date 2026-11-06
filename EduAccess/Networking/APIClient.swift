@@ -15,6 +15,8 @@ protocol APIClient: Sendable {
     func addOpenTime(start: Date, end: Date) async throws -> OpenTime
     func deleteOpenTime(id: Int) async throws
     func notifications() async throws -> [AppNotification]
+    func campusBlocks() async throws -> [CampusBlock]
+    func setCabin(_ request: CabinRequest) async throws -> Me
     func me() async throws -> Me
     func updateAvailability(_ update: AvailabilityUpdate) async throws -> Me
     /// A page of the web app, for the things only it can do.
@@ -31,6 +33,8 @@ enum APIError: LocalizedError, Equatable {
     case roleMismatch
     case sessionExpired
     case server(String)
+    /// A form's errors by field. Several fields can fail at once and each can have several messages.
+    case validation([String: [String]])
 
     var errorDescription: String? {
         switch self {
@@ -38,7 +42,15 @@ enum APIError: LocalizedError, Equatable {
         case .roleMismatch: "This account does not match the selected role, or is not active yet."
         case .sessionExpired: "Your session has ended. Please log in again."
         case .server(let message): message
+        case .validation(let errors): errors.sorted { $0.key < $1.key }.flatMap(\.value).joined(separator: " ")
         }
+    }
+
+    /// Reads a form error body, {"field": ["..."]}, keeping every message.
+    static func validation(body: Data) -> APIError {
+        let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any]
+        let errors = (json ?? [:]).compactMapValues { $0 as? [String] }
+        return errors.isEmpty ? server(body: body) : .validation(errors)
     }
 
     /// Reads a Django REST Framework error body: {"detail": "..."} or {"field": ["..."]}.

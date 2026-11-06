@@ -14,6 +14,7 @@ It has been run against a local copy of the backend, over HTTP and over HTTPS. I
 - Students edit the reason for a request while it is pending
 - Professors set their status with a note and a time they'll be back, and confirm or cancel requests. Confirming declines overlapping requests on the backend, and the list reloads to show that
 - Professors add and remove walk-in time for today
+- Professors set and change their cabin. Without one, they must set it before anything else, as on the website. This needs a backend version that is not deployed yet
 - Availability and appointment lists refresh every 10 seconds while on screen, as the web app's dashboards do
 - Notifications list for both roles, refreshed with the other lists
 - A link from the login screen to the website's account request form
@@ -105,14 +106,12 @@ Not yet run: a physical device, iPad, dark mode, VoiceOver, pull to refresh, tap
 - Plain HTTP only works for local addresses. Anything else needs HTTPS
 - The backend has no JSON login endpoint, so the app posts its HTML login form. That form's wrong-role and awaiting-approval messages are only in its HTML, so the app shows one shared message for both
 - Cabin directions open the website's page, which has the Maps link, 360 view, written steps and WhatsApp share. The backend has no API for a native screen
-- Professors set their cabin on the web app, because the backend has no API for it. A professor without a cabin can log in, but the backend refuses any change until the cabin is set
 
 ## Roadmap
 
 Nothing in this section is built. The goal is full parity with the EduAccess website:
 
 - Sign up in the app. This needs an API the backend does not have yet. Today the login screen links to the website's form
-- Professors set their cabin in the app. This needs an API the backend does not have yet
 
 Not on the website, and also not built:
 

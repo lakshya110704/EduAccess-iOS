@@ -21,6 +21,15 @@ final class LiveBackendTests: XCTestCase {
         return Date(timeIntervalSince1970: Double(quarters) * 900)
     }
 
+    /// Accounts from scripts/local_test_fixtures.py, which a plain seed_demo database doesn't have.
+    private func loggedInFixture(_ username: String) async throws -> LiveAPIClient {
+        do {
+            return try await loggedIn(username, as: .professor)
+        } catch APIError.invalidCredentials {
+            throw XCTSkip("Run scripts/local_test_fixtures.py")
+        }
+    }
+
     private func loggedIn(_ username: String, as role: UserRole) async throws -> LiveAPIClient {
         let client = LiveAPIClient()
         try await client.login(username: username, password: password, role: role)
@@ -146,6 +155,45 @@ final class LiveBackendTests: XCTestCase {
             XCTFail("Session survived logout")
         } catch {
             XCTAssertEqual(error as? APIError, .sessionExpired)
+        }
+    }
+
+    func testProfessorWithNoCabinIsRefusedUntilSettingOne() async throws {
+        let client = try await loggedInFixture("nocabin1")
+        var me = try await client.me()
+        try XCTSkipIf(me.hasCabin, "Run scripts/local_test_fixtures.py again")
+
+        do {
+            _ = try await client.updateAvailability(AvailabilityUpdate(availabilityStatus: .free, statusPick: "", statusText: "", statusUntil: nil))
+            XCTFail("Changed status with no cabin")
+        } catch {
+            XCTAssertEqual(error as? APIError, .server("Set your cabin location first."))
+        }
+
+        let blocks = try await client.campusBlocks()
+        let block = try XCTUnwrap(blocks.first { $0.number == 2 })
+        let faculty = try XCTUnwrap(block.facultyBlocks.first { $0.number == 3 })
+        me = try await client.setCabin(CabinRequest(academicBlock: block.id, facultyBlock: faculty.id, cabin: "g-12"))
+        XCTAssertEqual(me.cabinLabel, "AB2 FB3 : G-12")
+        XCTAssertTrue(me.hasCabin)
+
+        let updated = try await client.updateAvailability(AvailabilityUpdate(availabilityStatus: .free, statusPick: "", statusText: "", statusUntil: nil))
+        XCTAssertEqual(updated.availabilityStatus, .free)
+    }
+
+    func testSetCabinReportsEveryBadField() async throws {
+        let client = try await loggedIn("prof1", as: .professor)
+        let blocks = try await client.campusBlocks()
+        try XCTSkipIf(blocks.count < 2, "Run scripts/local_test_fixtures.py")
+        let block = try XCTUnwrap(blocks.first { $0.number == 2 })
+        let otherFaculty = try XCTUnwrap(blocks.first { $0.number == 1 }?.facultyBlocks.first)
+
+        do {
+            _ = try await client.setCabin(CabinRequest(academicBlock: block.id, facultyBlock: otherFaculty.id, cabin: "bad cabin"))
+            XCTFail("Saved a bad cabin")
+        } catch APIError.validation(let errors) {
+            XCTAssertEqual(errors["cabin"]?.count, 1)
+            XCTAssertEqual(errors["faculty_block"]?.count, 1)
         }
     }
 

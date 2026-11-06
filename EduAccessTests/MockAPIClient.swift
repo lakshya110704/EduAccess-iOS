@@ -13,6 +13,8 @@ final class MockAPIClient: APIClient {
     var meResult: Result<Me, Error> = .success(.sample)
     var updateError: Error?
     var saveError: Error?
+    var campusBlocksResult: Result<[CampusBlock], Error> = .success([])
+    var setCabinError: Error?
     var notificationsResult: Result<[AppNotification], Error> = .success([])
     var openTimesResult: Result<[OpenTime], Error> = .success([])
     var addOpenTimeError: Error?
@@ -30,6 +32,7 @@ final class MockAPIClient: APIClient {
     private(set) var confirmedIDs: [Int] = []
     private(set) var reasonUpdates: [(id: Int, topic: Appointment.Topic, details: String)] = []
     private(set) var updates: [AvailabilityUpdate] = []
+    private(set) var cabinRequests: [CabinRequest] = []
 
     func login(username: String, password: String, role: UserRole) async throws {
         loginCalls.append((username, password, role))
@@ -100,6 +103,16 @@ final class MockAPIClient: APIClient {
         reasonUpdates.append((appointmentID, topic, details))
         if let updateReasonError { throw updateReasonError }
         return Appointment(id: appointmentID, studentName: "Riya Sharma", professorName: "Ashish Gupta", appointmentTime: Date(timeIntervalSince1970: 1_800_000_000), endTime: Date(timeIntervalSince1970: 1_800_000_900), status: .pending, topic: topic, details: details)
+    }
+
+    func campusBlocks() async throws -> [CampusBlock] {
+        try campusBlocksResult.get()
+    }
+
+    func setCabin(_ request: CabinRequest) async throws -> Me {
+        cabinRequests.append(request)
+        if let setCabinError { throw setCabinError }
+        return .sample
     }
 
     func me() async throws -> Me {

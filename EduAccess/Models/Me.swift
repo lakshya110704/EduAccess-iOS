@@ -13,6 +13,12 @@ struct Me: Decodable, Equatable {
     let availabilityStatus: AvailabilityStatus
     let statusNote: StatusNote?
     let cabinLabel: String
+
+    /// The backend writes a complete cabin as "AB2 FB3 : 106". An older one can be just "106", and the
+    /// backend still treats that professor as having no cabin.
+    var hasCabin: Bool {
+        cabinLabel.contains(" : ")
+    }
 }
 
 /// The body of PATCH /api/me/. Always sends every field, because the backend keeps any note field left out.

@@ -5,6 +5,7 @@ struct ProfessorStatusView: View {
     let welcomeName: String?
     let onLogout: () -> Void
     @State private var viewModel: ProfessorStatusViewModel
+    @State private var isChangingCabin = false
 
     init(api: any APIClient, welcomeName: String?, onLogout: @escaping () -> Void) {
         self.api = api
@@ -47,6 +48,11 @@ struct ProfessorStatusView: View {
                 Button("Log Out", action: onLogout)
             }
             .task { await viewModel.load() }
+            .sheet(isPresented: $isChangingCabin) {
+                CabinView(api: api, currentLabel: viewModel.cabinLabel, isFirstTime: false, onSaved: { me in
+                    viewModel.cabinChanged(to: me.cabinLabel)
+                })
+            }
         }
     }
 
@@ -70,14 +76,8 @@ struct ProfessorStatusView: View {
 
     private var cabinSection: some View {
         Section {
-            if viewModel.hasLoaded && viewModel.cabinLabel.isEmpty {
-                Text("Set your cabin before changing anything else.")
-            } else {
-                LabeledContent("Cabin", value: viewModel.cabinLabel)
-            }
-            Link("Set Cabin on the Web App", destination: api.webURL("professor/cabin/"))
-        } footer: {
-            Text("Cabin changes are only available on the web app, which asks you to log in again.")
+            LabeledContent("Cabin", value: viewModel.cabinLabel)
+            Button("Change Cabin") { isChangingCabin = true }
         }
     }
 }
