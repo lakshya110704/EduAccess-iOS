@@ -2,11 +2,13 @@ import SwiftUI
 
 struct ProfessorStatusView: View {
     let api: any APIClient
+    let welcomeName: String?
     let onLogout: () -> Void
     @State private var viewModel: ProfessorStatusViewModel
 
-    init(api: any APIClient, onLogout: @escaping () -> Void) {
+    init(api: any APIClient, welcomeName: String?, onLogout: @escaping () -> Void) {
         self.api = api
+        self.welcomeName = welcomeName
         self.onLogout = onLogout
         _viewModel = State(initialValue: ProfessorStatusViewModel(api: api))
     }
@@ -14,6 +16,9 @@ struct ProfessorStatusView: View {
     var body: some View {
         NavigationStack {
             Form {
+                if let welcomeName {
+                    Text("Welcome, \(welcomeName)")
+                }
                 Section("Availability") {
                     Picker("Status", selection: $viewModel.status) {
                         ForEach(AvailabilityStatus.allCases) { Text($0.rawValue).tag($0) }

@@ -74,6 +74,7 @@ final class AppFlowUITests: XCTestCase {
 
     func testStudentRequestsAndProfessorConfirmsThenCancels() {
         logIn("student1", role: "Student")
+        waitForText(containing: "Welcome, Riya Sharma")
         let search = app.searchFields.firstMatch
         XCTAssertTrue(search.waitForExistence(timeout: timeout))
         type("AB2", into: search)
@@ -111,6 +112,7 @@ final class AppFlowUITests: XCTestCase {
         app.buttons["Log Out"].tap()
 
         logIn("prof1", role: "Professor")
+        waitForText(containing: "Welcome, Ashish Gupta")
         XCTAssertTrue(app.buttons["Update Status"].waitForExistence(timeout: timeout))
         app.buttons["Busy"].tap()
         XCTAssertTrue(app.textFields["Add a short note (optional)"].waitForExistence(timeout: timeout))

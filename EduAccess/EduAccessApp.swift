@@ -43,7 +43,7 @@ private struct RootView: View {
         switch login.loggedInRole {
         case .student:
             TabView {
-                ProfessorsView(api: api, onLogout: logout)
+                ProfessorsView(api: api, welcomeName: login.displayName, onLogout: logout)
                     .tabItem { Label("Professors", systemImage: "person.2") }
                 AppointmentsView(api: api, role: .student)
                     .tabItem { Label("Appointments", systemImage: "calendar") }
@@ -51,7 +51,7 @@ private struct RootView: View {
                     .tabItem { Label("Notifications", systemImage: "bell") }
             }
         case .professor:
-            ProfessorHomeView(api: api, onLogout: logout)
+            ProfessorHomeView(api: api, welcomeName: login.displayName, onLogout: logout)
         case nil:
             LoginView(viewModel: login)
         }

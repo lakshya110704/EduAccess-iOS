@@ -105,6 +105,41 @@ final class LoginViewModelTests: XCTestCase {
         XCTAssertNil(viewModel.errorMessage)
     }
 
+    func testLoginFetchesTheNameForTheWelcomeLine() async {
+        let viewModel = LoginViewModel(api: MockAPIClient())
+        viewModel.username = "prof1"
+        viewModel.password = "secret"
+
+        await viewModel.login()
+
+        XCTAssertEqual(viewModel.displayName, "Ashish Gupta")
+    }
+
+    func testFailingToFetchTheNameDoesNotFailLogin() async {
+        let api = MockAPIClient()
+        api.meResult = .failure(APIError.server("Server down"))
+        let viewModel = LoginViewModel(api: api)
+        viewModel.username = "prof1"
+        viewModel.password = "secret"
+
+        await viewModel.login()
+
+        XCTAssertEqual(viewModel.loggedInRole, .student)
+        XCTAssertNil(viewModel.displayName)
+        XCTAssertNil(viewModel.errorMessage)
+    }
+
+    func testLogoutForgetsTheName() async {
+        let viewModel = LoginViewModel(api: MockAPIClient())
+        viewModel.username = "prof1"
+        viewModel.password = "secret"
+        await viewModel.login()
+
+        await viewModel.logout()
+
+        XCTAssertNil(viewModel.displayName)
+    }
+
     func testSelectedRoleIsSentAndRemembered() async {
         let api = MockAPIClient()
         let viewModel = LoginViewModel(api: api)

@@ -2,11 +2,13 @@ import SwiftUI
 
 struct ProfessorsView: View {
     let api: any APIClient
+    let welcomeName: String?
     let onLogout: () -> Void
     @State private var viewModel: ProfessorsViewModel
 
-    init(api: any APIClient, onLogout: @escaping () -> Void) {
+    init(api: any APIClient, welcomeName: String?, onLogout: @escaping () -> Void) {
         self.api = api
+        self.welcomeName = welcomeName
         self.onLogout = onLogout
         _viewModel = State(initialValue: ProfessorsViewModel(api: api))
     }
@@ -25,7 +27,16 @@ struct ProfessorsView: View {
                 BookingView(professor: professor, api: api)
             }
             .toolbar {
-                Button("Log Out", action: onLogout)
+                if let welcomeName {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Text("Welcome, \(welcomeName)")
+                            .font(.subheadline)
+                            .lineLimit(1)
+                    }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Log Out", action: onLogout)
+                }
             }
             .searchable(text: $viewModel.query, prompt: "Search name, cabin or block")
             .autocorrectionDisabled()

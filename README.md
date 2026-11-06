@@ -16,7 +16,7 @@ It has been run against a local copy of the backend, over HTTP and over HTTPS. I
 - Professors add and remove walk-in time for today
 - Availability and appointment lists refresh every 10 seconds while on screen, as the web app's dashboards do
 - Notifications list for both roles, refreshed with the other lists
-- Stay logged in between launches
+- Stay logged in between launches, with a welcome line showing the user's name
 - Return to login with a message when the backend says the session has ended
 - Show the backend's own error message when it refuses a request
 

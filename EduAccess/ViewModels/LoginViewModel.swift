@@ -9,6 +9,7 @@ final class LoginViewModel {
     var role = UserRole.student
     private(set) var loggedInRole: UserRole?
     private(set) var isRestoring = true
+    private(set) var displayName: String?
     private(set) var isLoading = false
     private(set) var errorMessage: String?
 
@@ -26,6 +27,7 @@ final class LoginViewModel {
     func restoreSession() async {
         defer { isRestoring = false }
         if let me = try? await api.me() {
+            displayName = me.displayName
             loggedInRole = me.role
         }
     }
@@ -38,6 +40,8 @@ final class LoginViewModel {
             try await api.login(username: username.trimmingCharacters(in: .whitespaces), password: password, role: role)
             password = ""
             errorMessage = nil
+            // Only for the welcome line, so failing to fetch it must not fail the login.
+            displayName = (try? await api.me())?.displayName
             loggedInRole = role
         } catch {
             errorMessage = error.localizedDescription
@@ -48,6 +52,7 @@ final class LoginViewModel {
     func sessionExpired() {
         guard loggedInRole != nil else { return }
         loggedInRole = nil
+        displayName = nil
         username = ""
         errorMessage = APIError.sessionExpired.localizedDescription
     }
@@ -56,6 +61,7 @@ final class LoginViewModel {
         // Back to the login screen even if the request fails: logging in again replaces the session.
         try? await api.logout()
         loggedInRole = nil
+        displayName = nil
         username = ""
     }
 }
