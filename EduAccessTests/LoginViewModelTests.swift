@@ -62,6 +62,26 @@ final class LoginViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.username, "")
     }
 
+    func testExpiredSessionReturnsToLoginWithAMessage() async {
+        let viewModel = LoginViewModel(api: MockAPIClient())
+        viewModel.username = "student1"
+        viewModel.password = "secret"
+        await viewModel.login()
+
+        viewModel.sessionExpired()
+
+        XCTAssertNil(viewModel.loggedInRole)
+        XCTAssertEqual(viewModel.errorMessage, "Your session has ended. Please log in again.")
+    }
+
+    func testExpiryWhileLoggedOutShowsNoMessage() {
+        let viewModel = LoginViewModel(api: MockAPIClient())
+
+        viewModel.sessionExpired()
+
+        XCTAssertNil(viewModel.errorMessage)
+    }
+
     func testSelectedRoleIsSentAndRemembered() async {
         let api = MockAPIClient()
         let viewModel = LoginViewModel(api: api)

@@ -4,13 +4,14 @@ import XCTest
 /// Answers every request with an empty 200 and keeps what it was sent.
 final class RecordingProtocol: URLProtocol {
     nonisolated(unsafe) static var requests: [URLRequest] = []
+    nonisolated(unsafe) static var statusCode = 200
 
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
 
     override func startLoading() {
         Self.requests.append(request)
-        let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
+        let response = HTTPURLResponse(url: request.url!, statusCode: Self.statusCode, httpVersion: nil, headerFields: nil)!
         client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
         client?.urlProtocol(self, didLoad: Data())
         client?.urlProtocolDidFinishLoading(self)
@@ -132,12 +133,42 @@ final class LiveAPIClientTests: XCTestCase {
 
     private func stubbedClient() -> LiveAPIClient {
         RecordingProtocol.requests = []
+        RecordingProtocol.statusCode = 200
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [RecordingProtocol.self]
         configuration.httpCookieStorage?.setCookie(HTTPCookie(properties: [
             .domain: "example.test", .path: "/", .name: "csrftoken", .value: "token123", .secure: "TRUE",
         ])!)
         return LiveAPIClient(baseURL: URL(string: "https://example.test")!, session: URLSession(configuration: configuration))
+    }
+
+    func testRefusedReadMeansTheSessionEnded() async {
+        let client = stubbedClient()
+        RecordingProtocol.statusCode = 403
+        let posted = expectation(forNotification: .sessionExpired, object: nil)
+
+        do {
+            _ = try await client.me()
+            XCTFail("Expected a failure")
+        } catch {
+            XCTAssertEqual(error as? APIError, .sessionExpired)
+        }
+        await fulfillment(of: [posted], timeout: 5)
+    }
+
+    func testRefusedWriteDoesNotEndTheSession() async {
+        let client = stubbedClient()
+        RecordingProtocol.statusCode = 403
+        let posted = expectation(forNotification: .sessionExpired, object: nil)
+        posted.isInverted = true
+
+        do {
+            _ = try await client.confirm(appointmentID: 1)
+            XCTFail("Expected a failure")
+        } catch {
+            XCTAssertNotEqual(error as? APIError, .sessionExpired)
+        }
+        await fulfillment(of: [posted], timeout: 0.5)
     }
 
     func testReadsDetailError() {

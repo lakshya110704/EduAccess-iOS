@@ -128,6 +128,18 @@ final class LiveBackendTests: XCTestCase {
         _ = try await professor.cancel(appointmentID: request.id)
     }
 
+    func testReadAfterLogoutReportsTheSessionEnded() async throws {
+        let client = try await loggedIn("student2", as: .student)
+        try await client.logout()
+
+        do {
+            _ = try await client.myProfessors()
+            XCTFail("Read succeeded after logout")
+        } catch {
+            XCTAssertEqual(error as? APIError, .sessionExpired)
+        }
+    }
+
     func testStudentSavesAndUnsavesAProfessor() async throws {
         let student = try await loggedIn("student2", as: .student)
         let professor = try await student.searchProfessors("Gupta")[0]

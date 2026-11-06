@@ -197,9 +197,19 @@ struct LiveAPIClient: APIClient {
         return request
     }
 
+    private func status(of response: URLResponse) -> Int? {
+        (response as? HTTPURLResponse)?.statusCode
+    }
+
     private func send<T: Decodable>(_ request: URLRequest) async throws -> T {
         let (body, response) = try await session.data(for: request)
         guard let status = (response as? HTTPURLResponse)?.statusCode, 200..<300 ~= status else {
+            // Django answers 403 when the session is gone. On a write a 403 can mean other things, such as
+            // the cabin gate, so like the website only a refused read counts as the session ending.
+            if request.httpMethod == "GET", status(of: response) == 401 || status(of: response) == 403 {
+                NotificationCenter.default.post(name: .sessionExpired, object: nil)
+                throw APIError.sessionExpired
+            }
             throw APIError.server(body: body)
         }
         return try Self.decoder.decode(T.self, from: body)

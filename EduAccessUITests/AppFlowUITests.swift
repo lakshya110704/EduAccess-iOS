@@ -89,8 +89,7 @@ final class AppFlowUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Request Appointment"].waitForExistence(timeout: timeout))
         XCTAssertTrue(app.links["Directions to Cabin"].exists || app.buttons["Directions to Cabin"].exists)
         attachScreenshot("student-booking")
-        app.buttons["Request Appointment"].tap()
-        XCTAssertTrue(app.alerts["Request Sent"].waitForExistence(timeout: timeout))
+        tapUntil(app.buttons["Request Appointment"], reveals: app.alerts["Request Sent"])
         app.alerts.buttons["OK"].tap()
         XCTAssertTrue(app.searchFields.firstMatch.waitForExistence(timeout: timeout))
 

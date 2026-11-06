@@ -21,15 +21,22 @@ protocol APIClient: Sendable {
     func webURL(_ path: String) -> URL
 }
 
+extension Notification.Name {
+    /// Posted when the backend says the session is gone, so the whole app can return to login from any screen.
+    static let sessionExpired = Notification.Name("EduAccessSessionExpired")
+}
+
 enum APIError: LocalizedError, Equatable {
     case invalidCredentials
     case roleMismatch
+    case sessionExpired
     case server(String)
 
     var errorDescription: String? {
         switch self {
         case .invalidCredentials: "Incorrect username or password."
         case .roleMismatch: "This account does not match the selected role, or is not active yet."
+        case .sessionExpired: "Your session has ended. Please log in again."
         case .server(let message): message
         }
     }

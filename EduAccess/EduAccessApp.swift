@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 
 @main
@@ -21,6 +22,14 @@ private struct RootView: View {
     }
 
     var body: some View {
+        content
+            .onReceive(NotificationCenter.default.publisher(for: .sessionExpired).receive(on: RunLoop.main)) { _ in
+                login.sessionExpired()
+            }
+    }
+
+    @ViewBuilder
+    private var content: some View {
         switch login.loggedInRole {
         case .student:
             TabView {

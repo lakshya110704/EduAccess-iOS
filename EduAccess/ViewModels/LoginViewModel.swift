@@ -35,6 +35,14 @@ final class LoginViewModel {
         }
     }
 
+    /// Ignored when already logged out, because a request in flight during logout can be refused too.
+    func sessionExpired() {
+        guard loggedInRole != nil else { return }
+        loggedInRole = nil
+        username = ""
+        errorMessage = APIError.sessionExpired.localizedDescription
+    }
+
     func logout() async {
         // Back to the login screen even if the request fails: logging in again replaces the session.
         try? await api.logout()
