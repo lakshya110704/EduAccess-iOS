@@ -4,6 +4,8 @@ struct SignupView: View {
     @State private var viewModel: SignupViewModel
     @Environment(\.dismiss) private var dismiss
 
+    private static let fieldOrder = ["role", "username", "first_name", "middle_name", "last_name", "email", "college_id", "password1", "password2"]
+
     init(api: any APIClient, role: UserRole) {
         let viewModel = SignupViewModel(api: api)
         viewModel.role = role
@@ -48,6 +50,18 @@ struct SignupView: View {
     }
 
     private var form: some View {
+        ScrollViewReader { proxy in
+            fields
+                // The submit button is at the bottom, so the first error can be off screen above it.
+                .onChange(of: viewModel.fieldErrors) { _, errors in
+                    if let first = Self.fieldOrder.lazy.compactMap({ errors[$0]?.first }).first {
+                        proxy.scrollTo(first, anchor: .top)
+                    }
+                }
+        }
+    }
+
+    private var fields: some View {
         Form {
             Section {
                 Picker("Role", selection: $viewModel.role) {
@@ -111,6 +125,7 @@ struct SignupView: View {
             Text($0)
                 .font(.footnote)
                 .foregroundStyle(.red)
+                .id($0)
         }
     }
 }

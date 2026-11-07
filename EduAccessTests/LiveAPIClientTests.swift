@@ -160,7 +160,8 @@ final class LiveAPIClientTests: XCTestCase {
     func testRefusedWriteDoesNotEndTheSession() async {
         let client = stubbedClient()
         RecordingProtocol.statusCode = 403
-        let posted = expectation(forNotification: .sessionExpired, object: nil)
+        // Only this client: the host app's own launch check can post this notification at any time.
+        let posted = expectation(forNotification: .sessionExpired, object: client.session)
         posted.isInverted = true
 
         do {

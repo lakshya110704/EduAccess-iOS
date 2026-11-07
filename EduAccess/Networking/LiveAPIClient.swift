@@ -232,7 +232,7 @@ struct LiveAPIClient: APIClient {
             // Django answers 403 when the session is gone. On a write a 403 can mean other things, such as
             // the cabin gate, so like the website only a refused read counts as the session ending.
             if request.httpMethod == "GET", status(of: response) == 401 || status(of: response) == 403 {
-                NotificationCenter.default.post(name: .sessionExpired, object: nil)
+                NotificationCenter.default.post(name: .sessionExpired, object: session)
                 throw APIError.sessionExpired
             }
             throw keepingFieldErrors && status(of: response) == 400 ? APIError.validation(body: body) : APIError.server(body: body)
