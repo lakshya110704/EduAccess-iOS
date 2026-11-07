@@ -17,7 +17,7 @@ It has been run against a local copy of the backend, over HTTP and over HTTPS. I
 - Professors set and change their cabin. Without one, they must set it before anything else, as on the website
 - Availability and appointment lists refresh every 10 seconds while on screen, as the web app's dashboards do
 - Notifications list for both roles, refreshed with the other lists
-- Request an account from the login screen. It shows every field's errors, and says the account waits for an admin to activate it. It does not log the user in
+- Request an account from the login screen. It shows every field's errors, scrolls to the first one, and says the account waits for an admin to activate it. It does not log the user in
 - Stay logged in between launches, with a welcome line showing the user's name
 - Return to login with a message when the backend says the session has ended
 - Show the backend's own error message when it refuses a request
@@ -31,9 +31,9 @@ It has been run against a local copy of the backend, over HTTP and over HTTPS. I
 
 ```
 EduAccess/
-  Models/         Professor, Appointment, Me, OpenTime, AppNotification, UserRole, AvailabilityStatus
+  Models/         Professor, Appointment, Me, OpenTime, AppNotification, CampusBlock, Signup, UserRole, AvailabilityStatus
   Networking/     APIClient protocol, LiveAPIClient
-  ViewModels/     Login, Professors, Booking, Appointments, ProfessorStatus, OpenTime, Notifications
+  ViewModels/     Login, Signup, Professors, Booking, Appointments, ProfessorStatus, ProfessorGate, Cabin, OpenTime, Notifications
   Views/          SwiftUI screens
 EduAccessTests/   View model tests with a mock, client tests, tests against a local backend
 EduAccessUITests/ Full flows through the real app against a local backend
@@ -82,13 +82,20 @@ Last runs, on an iPhone 16 simulator with iOS 18.0 and Xcode 27.2:
 
 | Run | Passed | Failed | Skipped |
 |---|---|---|---|
-| Fresh clone, no password | 79 | 0 | 13 |
-| Local backend over HTTP | 92 | 0 | 0 |
-| Local backend in production mode behind a local TLS proxy, over HTTPS | 92 | 0 | 0 |
+| Fresh clone, no password | 107 | 0 | 21 |
+| Local backend `b9a5f97` over HTTP | 128 | 0 | 0 |
+| Local backend `b9a5f97` in production mode behind a local TLS proxy, over HTTPS | 128 | 0 | 0 |
 
-The 13 skipped tests are the 11 that call the local backend directly and the 2 UI flows. The UI flows cover a student searching, saving a professor, requesting an appointment and editing its reason, then a professor setting a status note, confirming and cancelling that request, and reading the notification about it.
+The 21 skipped tests are the 17 that call the local backend directly and the 4 UI flows. The UI flows cover:
+
+- A student searching, saving a professor, requesting an appointment and editing its reason, then a professor setting a status note, confirming and cancelling that request, and reading the notification about it
+- A professor with no cabin being stopped until they set one
+- Signing up with bad fields and seeing every error, then signing up properly, seeing the wait for approval, and being refused at login
+- Logging in under the wrong role
 
 These UI flows needed retries for dropped taps while the machine was under heavy load. Those retries are in the test code.
+
+The sign-up flow is not fully stable. Run three times in a row, it passed twice, and the third run failed when the app crashed inside `XCTAutomationSupport`, Xcode's test support library, while it was logging an accessibility query. Before the app scrolled to the first error, the flow also failed once waiting for an error message, on a heavily loaded machine. That cause was not confirmed.
 
 ## Checked directly
 
@@ -100,14 +107,15 @@ Against the same local backend:
 - With the app left open, the backend log showed a request every 10 to 11 seconds for the visible tab only, and none after logout
 - Over HTTPS with production settings, session and CSRF cookies were `Secure`. Writes without a `Referer` got `403` and writes with one succeeded
 - Cabin directions page: `200` with `curl`
+- The four sign-up and cabin endpoints on `b9a5f97`, with `curl` over HTTP and HTTPS: sign-up creates an inactive account, bad input returns every field's error, the cabin gate returns `403` until a cabin is set and then lifts, and students are refused. Backend `8be6939` returned `404` for all four
 
 Deployed backend: only a read-only check that `/healthz/` returns `200` with a valid certificate. Logging in and any writes there are not yet run.
 
-Not yet run: a physical device, iPad, dark mode, VoiceOver, pull to refresh, tapping the directions, set-cabin and create-account links, the app with the backend offline, and a professor without a cabin in the UI.
+Not yet run: a physical device, iPad, dark mode, VoiceOver, pull to refresh, tapping the directions link, the app with the backend offline, and the app against a backend without the sign-up and cabin endpoints.
 
 ## Limitations
 
-- **Sign-up and setting a cabin need a backend version that is not deployed yet.** They use `/api/signup/`, `/api/signup/options/`, `/api/campus-blocks/` and `/api/me/cabin/`, tested only against a local copy of backend commit `b9a5f97`. Against an older backend both fail, and a professor with no cabin can't get past the cabin screen in the app until the backend is updated. Until then this app does not have full parity with the deployed website
+- **Sign-up and setting a cabin need a backend version that is not deployed yet.** They use `/api/signup/`, `/api/signup/options/`, `/api/campus-blocks/` and `/api/me/cabin/`, tested only against a local copy of backend commit `b9a5f97`. Older backends return `404` for them. From reading the code, not from running it, both features then fail, and a professor with no cabin can't get past the cabin screen in the app until the backend is updated. Until then this app does not have full parity with the deployed website
 - Plain HTTP only works for local addresses. Anything else needs HTTPS
 - The backend has no JSON login endpoint, so the app posts its HTML login form. That form's wrong-role and awaiting-approval messages are only in its HTML, so the app shows one shared message for both
 - Cabin directions open the website's page, which has the Maps link, 360 view, written steps and WhatsApp share. The backend has no API for a native screen
