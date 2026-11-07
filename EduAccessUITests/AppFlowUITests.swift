@@ -151,7 +151,8 @@ final class AppFlowUITests: XCTestCase {
 
         logIn("prof1", role: "Professor")
         waitForText(containing: "Welcome, Ashish Gupta")
-        XCTAssertTrue(app.buttons["Update Status"].waitForExistence(timeout: timeout))
+        XCTAssertTrue(app.buttons["Busy"].waitForExistence(timeout: timeout))
+        XCTAssertFalse(app.buttons["Update Status"].exists, "Nothing has changed yet")
         app.buttons["Busy"].tap()
         XCTAssertTrue(app.textFields["Add a short note (optional)"].waitForExistence(timeout: timeout))
         type("Back soon\n", into: app.textFields["Add a short note (optional)"])
@@ -214,7 +215,7 @@ final class AppFlowUITests: XCTestCase {
         choose("Academic Block 2", in: "Academic block")
         choose("Faculty Block 3", in: "Faculty block")
         type("g-12", into: app.textFields["Cabin number"])
-        tapUntil(app.buttons["Save Cabin"], reveals: app.buttons["Update Status"])
+        tapUntil(app.buttons["Save Cabin"], reveals: app.buttons["Change Cabin"])
         waitForText(containing: "AB2 FB3 : G-12")
         attachScreenshot("cabin-saved")
 

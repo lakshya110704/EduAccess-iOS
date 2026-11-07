@@ -12,7 +12,7 @@ It has been run against a local copy of the backend, over HTTP and over HTTPS. I
 - Request a 15 or 30 minute appointment with a time, a reason and optional details. Times round up to the quarter hour, as the backend requires
 - List appointments with their start and end times, and cancel one, with a confirmation first
 - Students edit the reason for a request while it is pending
-- Professors set their status with a note and a time they'll be back, and confirm or cancel requests. Confirming declines overlapping requests on the backend, and the list reloads to show that
+- Professors set their status with a note and a time they'll be back, with an Update Status button that appears only after a change, and confirm or cancel requests. Confirming declines overlapping requests on the backend, and the list reloads to show that
 - Professors add and remove walk-in time for today
 - Professors set and change their cabin. Without one, they must set it before anything else, as on the website
 - Availability and appointment lists refresh every 10 seconds while on screen, as the web app's dashboards do
@@ -95,7 +95,7 @@ The 21 skipped tests are the 17 that call the local backend directly and the 4 U
 
 These UI flows needed retries for dropped taps while the machine was under heavy load. Those retries are in the test code.
 
-The sign-up flow is not fully stable. Run three times in a row, it passed twice, and the third run failed when the app crashed inside `XCTAutomationSupport`, Xcode's test support library, while it was logging an accessibility query. Before the app scrolled to the first error, the flow also failed once waiting for an error message, on a heavily loaded machine. That cause was not confirmed.
+The sign-up flow is not fully stable. Run three times in a row, it passed twice, and the third run failed when the app crashed inside `XCTAutomationSupport`, Xcode's test support library, while it was logging an accessibility query. The same crash in the same library failed one later full run. Before the app scrolled to the first error, the flow also failed once waiting for an error message, on a heavily loaded machine. That cause was not confirmed.
 
 ## Checked directly
 

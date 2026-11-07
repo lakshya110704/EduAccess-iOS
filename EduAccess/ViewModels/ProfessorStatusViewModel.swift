@@ -19,6 +19,7 @@ final class ProfessorStatusViewModel {
     private(set) var isSaving = false
     private(set) var didSave = false
     private(set) var errorMessage: String?
+    private var savedUpdate: AvailabilityUpdate?
 
     private let api: any APIClient
 
@@ -70,6 +71,11 @@ final class ProfessorStatusViewModel {
         )
     }
 
+    /// Whether the status or note differs from what the backend last returned.
+    var hasChanges: Bool {
+        savedUpdate.map { $0 != update } ?? false
+    }
+
     private func resetUntil() {
         hasUntil = false
         until = status == .busy
@@ -86,5 +92,6 @@ final class ProfessorStatusViewModel {
             until = back
         }
         cabinLabel = me.cabinLabel
+        savedUpdate = update
     }
 }

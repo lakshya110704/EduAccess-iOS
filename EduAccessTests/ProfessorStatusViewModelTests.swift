@@ -88,6 +88,61 @@ final class ProfessorStatusViewModelTests: XCTestCase {
         XCTAssertNil(viewModel.errorMessage)
     }
 
+    func testHasNoChangesUntilLoadedOrEdited() async {
+        let api = MockAPIClient()
+        api.meResult = .success(Me(
+            displayName: "Ashish Gupta",
+            role: .professor,
+            availabilityStatus: .busy,
+            statusNote: StatusNote(pick: "Lunch", text: "Back soon", until: Date(timeIntervalSince1970: 1_800_000_000)),
+            cabinLabel: "AB2 FB3 : 106"
+        ))
+        let viewModel = ProfessorStatusViewModel(api: api)
+        viewModel.status = .busy
+        XCTAssertFalse(viewModel.hasChanges, "Nothing to compare with before loading")
+
+        await viewModel.load()
+
+        XCTAssertFalse(viewModel.hasChanges)
+    }
+
+    func testChangingStatusOrNoteCountsAsAChangeAndUndoingItDoesNot() async {
+        let viewModel = ProfessorStatusViewModel(api: MockAPIClient())
+        await viewModel.load()
+        let original = viewModel.status
+
+        viewModel.status = original == .busy ? .free : .busy
+        XCTAssertTrue(viewModel.hasChanges)
+        viewModel.status = original
+        XCTAssertFalse(viewModel.hasChanges)
+
+        viewModel.status = .busy
+        await viewModel.save()
+        XCTAssertFalse(viewModel.hasChanges)
+        viewModel.pick = "Lunch"
+        XCTAssertTrue(viewModel.hasChanges)
+        viewModel.pick = ""
+        viewModel.text = "  "
+        XCTAssertFalse(viewModel.hasChanges, "Spaces alone aren't a note")
+        viewModel.text = "Back soon"
+        XCTAssertTrue(viewModel.hasChanges)
+    }
+
+    func testSavingClearsChangesButAFailedSaveKeepsThem() async {
+        let api = MockAPIClient()
+        let viewModel = ProfessorStatusViewModel(api: api)
+        await viewModel.load()
+        viewModel.status = viewModel.status == .busy ? .free : .busy
+
+        api.updateError = APIError.server("Nope")
+        await viewModel.save()
+        XCTAssertTrue(viewModel.hasChanges)
+
+        api.updateError = nil
+        await viewModel.save()
+        XCTAssertFalse(viewModel.hasChanges)
+    }
+
     func testCabinGateRefusalShowsTheBackendMessage() async {
         let api = MockAPIClient()
         api.updateError = APIError.server("Set your cabin location first.")

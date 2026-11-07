@@ -30,14 +30,23 @@ struct ProfessorStatusView: View {
                     noteSection
                 }
                 Section {
-                    Button("Update Status") {
-                        Task { await viewModel.save() }
+                    if viewModel.hasChanges {
+                        Button {
+                            Task { await viewModel.save() }
+                        } label: {
+                            Text("Update Status").frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.large)
+                        .tint(.indigo)
+                        .disabled(viewModel.isSaving)
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
                     }
-                    .disabled(viewModel.isSaving || !viewModel.hasLoaded)
                 } footer: {
                     if let error = viewModel.errorMessage {
                         Text(error).foregroundStyle(.red)
-                    } else if viewModel.didSave {
+                    } else if viewModel.didSave && !viewModel.hasChanges {
                         Text("Status updated. Students see it now.")
                     }
                 }
