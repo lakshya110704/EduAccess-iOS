@@ -2,7 +2,7 @@
 
 A SwiftUI client for the [EduAccess](https://github.com/lakshya110704/EduAccess) Django REST backend. A student logs in, checks a professor's availability, requests an appointment and cancels it. A professor logs in, sets their availability and confirms or cancels requests.
 
-It has been run against a local copy of the backend, over HTTP and over HTTPS. It is not on the App Store.
+It has been run against a local copy of the backend, over HTTP and over HTTPS, and partly tested on an iPhone against the deployed backend. It is not on the App Store.
 
 ## Features
 
@@ -81,18 +81,19 @@ TEST_RUNNER_EDUACCESS_TEST_PASSWORD=<seed_demo password> xcodebuild test -projec
 
 Last runs, on an iPhone 16 simulator with iOS 18.0 and Xcode 27.2:
 
-| Run | Passed | Failed | Skipped |
-|---|---|---|---|
-| Fresh clone, no password | 107 | 0 | 21 |
-| Local backend `b9a5f97` over HTTP | 128 | 0 | 0 |
-| Local backend `b9a5f97` in production mode behind a local TLS proxy, over HTTPS | 128 | 0 | 0 |
+| Run | App commit | Passed | Failed | Skipped |
+|---|---|---|---|---|
+| Local backend `b9a5f97` over HTTP | Latest code commit | 132 | 0 | 0 |
+| Local backend `b9a5f97` in production mode behind a local TLS proxy, over HTTPS | Before the Update Status and keyboard changes | 128 | 0 | 0 |
+| Fresh clone, no password | Before the Update Status and keyboard changes | 107 | 0 | 21 |
 
-The 21 skipped tests are the 17 that call the local backend directly and the 4 UI flows. The UI flows cover:
+The HTTPS and fresh clone runs have not been repeated since those two changes. In that fresh clone run, the 21 skipped tests were the 17 that call the local backend directly and the 4 UI flows that existed then. The UI flows now cover:
 
 - A student searching, saving a professor, requesting an appointment and editing its reason, then a professor setting a status note, confirming and cancelling that request, and reading the notification about it
 - A professor with no cabin being stopped until they set one
 - Signing up with bad fields and seeing every error, then signing up properly, seeing the wait for approval, and being refused at login
 - Logging in under the wrong role
+- Tapping outside a text field to close the keyboard, on the login screen and the sign-up sheet
 
 These UI flows needed retries for dropped taps while the machine was under heavy load. Those retries are in the test code.
 
@@ -110,13 +111,15 @@ Against the same local backend:
 - Cabin directions page: `200` with `curl`
 - The four sign-up and cabin endpoints on `b9a5f97`, with `curl` over HTTP and HTTPS: sign-up creates an inactive account, bad input returns every field's error, the cabin gate returns `403` until a cabin is set and then lifts, and students are refused. Backend `8be6939` returned `404` for all four
 
-Deployed backend, now on `b9a5f97`: only read-only checks. `/healthz/` and `/api/signup/options/` return `200` with a valid certificate, and `/api/campus-blocks/` and `/api/me/cabin/` return `403` without a login. Logging in and any writes there are not yet run.
+Deployed backend, now on `b9a5f97`: `/healthz/` and `/api/signup/options/` return `200` with a valid certificate, and `/api/campus-blocks/` and `/api/me/cabin/` return `403` without a login.
 
-Not yet run: a physical device, iPad, dark mode, VoiceOver, pull to refresh, tapping the directions link, the app with the backend offline, and the app against a backend without the sign-up and cabin endpoints.
+On an iPhone 18 Pro against the deployed backend, its logs and database confirm a wrong password being refused, a professor logging in, the cabin screen loading its blocks and saving a cabin, and two status updates. Closing the keyboard and the Update Status button were checked by hand on the same phone.
+
+Not yet run: student login, saving a professor, booking, confirming or cancelling, notifications with content and in-app sign-up on the deployed backend, plus iPad, dark mode, VoiceOver, pull to refresh, tapping the directions link, the app with the backend offline, and the app against a backend without the sign-up and cabin endpoints.
 
 ## Limitations
 
-- **Sign-up and setting a cabin need backend commit `b9a5f97` or later.** They use `/api/signup/`, `/api/signup/options/`, `/api/campus-blocks/` and `/api/me/cabin/`. That commit is deployed, but the app has only been tested against a local copy of it, so parity with the deployed website is not yet confirmed. Older backends return `404` for these endpoints. From reading the code, not from running it, both features then fail, and a professor with no cabin can't get past the cabin screen in the app until the backend is updated
+- **Sign-up and setting a cabin need backend commit `b9a5f97` or later.** They use `/api/signup/`, `/api/signup/options/`, `/api/campus-blocks/` and `/api/me/cabin/`. That commit is deployed, and setting a cabin is confirmed there, but sign-up and the student flows are only tested against a local copy, so parity with the deployed website is not yet confirmed. Older backends return `404` for these endpoints. From reading the code, not from running it, both features then fail, and a professor with no cabin can't get past the cabin screen in the app until the backend is updated
 - Plain HTTP only works for local addresses. Anything else needs HTTPS
 - The backend has no JSON login endpoint, so the app posts its HTML login form. That form's wrong-role and awaiting-approval messages are only in its HTML, so the app shows one shared message for both
 - Cabin directions open the website's page, which has the Maps link, 360 view, written steps and WhatsApp share. The backend has no API for a native screen
