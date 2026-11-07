@@ -52,7 +52,7 @@ export DB_ENGINE=sqlite DJANGO_DEBUG=True
 .venv/bin/python manage.py runserver 127.0.0.1:8000
 ```
 
-`seed_demo` creates demo students and professors. Its password is in `api/management/commands/seed_demo.py` in the backend. Sign-up and setting a cabin need backend commit `b9a5f97` or later, which is not on GitHub yet. To add the campus blocks and cabin-less professors they need, run this from the backend checkout:
+`seed_demo` creates demo students and professors. Its password is in `api/management/commands/seed_demo.py` in the backend. Sign-up and setting a cabin need backend commit `b9a5f97` or later. To add the campus blocks and cabin-less professors they need, run this from the backend checkout:
 
 ```bash
 .venv/bin/python manage.py shell < path/to/EduAccess-iOS/scripts/local_test_fixtures.py
@@ -109,13 +109,13 @@ Against the same local backend:
 - Cabin directions page: `200` with `curl`
 - The four sign-up and cabin endpoints on `b9a5f97`, with `curl` over HTTP and HTTPS: sign-up creates an inactive account, bad input returns every field's error, the cabin gate returns `403` until a cabin is set and then lifts, and students are refused. Backend `8be6939` returned `404` for all four
 
-Deployed backend: only a read-only check that `/healthz/` returns `200` with a valid certificate. Logging in and any writes there are not yet run.
+Deployed backend, now on `b9a5f97`: only read-only checks. `/healthz/` and `/api/signup/options/` return `200` with a valid certificate, and `/api/campus-blocks/` and `/api/me/cabin/` return `403` without a login. Logging in and any writes there are not yet run.
 
 Not yet run: a physical device, iPad, dark mode, VoiceOver, pull to refresh, tapping the directions link, the app with the backend offline, and the app against a backend without the sign-up and cabin endpoints.
 
 ## Limitations
 
-- **Sign-up and setting a cabin need a backend version that is not deployed yet.** They use `/api/signup/`, `/api/signup/options/`, `/api/campus-blocks/` and `/api/me/cabin/`, tested only against a local copy of backend commit `b9a5f97`. Older backends return `404` for them. From reading the code, not from running it, both features then fail, and a professor with no cabin can't get past the cabin screen in the app until the backend is updated. Until then this app does not have full parity with the deployed website
+- **Sign-up and setting a cabin need backend commit `b9a5f97` or later.** They use `/api/signup/`, `/api/signup/options/`, `/api/campus-blocks/` and `/api/me/cabin/`. That commit is deployed, but the app has only been tested against a local copy of it, so parity with the deployed website is not yet confirmed. Older backends return `404` for these endpoints. From reading the code, not from running it, both features then fail, and a professor with no cabin can't get past the cabin screen in the app until the backend is updated
 - Plain HTTP only works for local addresses. Anything else needs HTTPS
 - The backend has no JSON login endpoint, so the app posts its HTML login form. That form's wrong-role and awaiting-approval messages are only in its HTML, so the app shows one shared message for both
 - Cabin directions open the website's page, which has the Maps link, 360 view, written steps and WhatsApp share. The backend has no API for a native screen
