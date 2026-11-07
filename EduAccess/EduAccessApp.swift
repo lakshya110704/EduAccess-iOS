@@ -23,6 +23,7 @@ private struct RootView: View {
 
     var body: some View {
         content
+            .background(TapToDismissKeyboard().accessibilityHidden(true))
             .task { await login.restoreSession() }
             .onReceive(NotificationCenter.default.publisher(for: .sessionExpired).receive(on: RunLoop.main)) { _ in
                 login.sessionExpired()

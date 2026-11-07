@@ -258,6 +258,29 @@ final class AppFlowUITests: XCTestCase {
         waitForText(containing: "or is not active yet")
     }
 
+    private func waitForFocus(_ field: XCUIElement, _ focused: Bool) -> Bool {
+        let predicate = NSPredicate(format: "hasKeyboardFocus == %@", NSNumber(value: focused))
+        return XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: predicate, object: field)], timeout: 10) == .completed
+    }
+
+    func testTappingOutsideAFieldClosesTheKeyboard() {
+        let username = app.textFields["Username"]
+        let passwordField = app.secureTextFields["Password"]
+        XCTAssertTrue(username.waitForExistence(timeout: timeout))
+
+        type("a", into: username)
+        passwordField.tap()
+        XCTAssertTrue(waitForFocus(passwordField, true), "Tapping another field should move to it")
+        app.images["EduAccess"].tap()
+        XCTAssertTrue(waitForFocus(passwordField, false), "Login screen kept the keyboard open")
+
+        tapUntil(app.buttons["New to EduAccess? Create an account"], reveals: app.buttons["Request Account"])
+        let form = app.collectionViews.firstMatch
+        type("a", into: form.textFields["Username"])
+        app.navigationBars.staticTexts["Create Account"].tap()
+        XCTAssertTrue(waitForFocus(form.textFields["Username"], false), "Sign-up sheet kept the keyboard open")
+    }
+
     func testWrongRoleShowsAnError() {
         logIn("student1", role: "Professor")
         waitForText(containing: "does not match the selected role")

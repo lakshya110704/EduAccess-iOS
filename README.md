@@ -21,6 +21,7 @@ It has been run against a local copy of the backend, over HTTP and over HTTPS. I
 - Stay logged in between launches, with a welcome line showing the user's name
 - Return to login with a message when the backend says the session has ended
 - Show the backend's own error message when it refuses a request
+- Close the keyboard when tapping outside a text field, on every screen
 
 ## How it is built
 
