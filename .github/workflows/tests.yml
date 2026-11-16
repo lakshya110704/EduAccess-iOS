@@ -1,0 +1,19 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pick an iPhone simulator
+        run: |
+          ID=$(xcrun simctl list devices available -j | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; print(next(x['udid'] for r,v in d.items() if 'iOS' in r for x in v if 'iPhone' in x['deviceTypeIdentifier']))")
+          echo "SIM_ID=$ID" >> "$GITHUB_ENV"
+      # No backend in CI, so the live backend tests and UI flows skip themselves.
+      - name: Run tests
+        run: xcodebuild test -project EduAccess.xcodeproj -scheme EduAccess -destination "id=$SIM_ID" CODE_SIGNING_ALLOWED=NO
