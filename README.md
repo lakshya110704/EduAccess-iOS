@@ -1,5 +1,7 @@
 # EduAccess iOS
 
+[![Tests](https://github.com/lakshya110704/EduAccess-iOS/actions/workflows/tests.yml/badge.svg)](https://github.com/lakshya110704/EduAccess-iOS/actions/workflows/tests.yml)
+
 Students can see whether a professor is free before walking across campus, and book time with them. EduAccess iOS is the native SwiftUI client for the [EduAccess](https://github.com/lakshya110704/EduAccess) Django REST backend.
 
 | Log in | Check professors | Request an appointment |
@@ -101,7 +103,7 @@ Last runs, on an iPhone 16 simulator with iOS 18.0 and Xcode 27.2:
 |---|---|---|---|---|
 | Local backend over HTTP | Current | 132 | 0 | 0 |
 | Local backend in production mode behind a TLS proxy, over HTTPS | Before the Update Status and keyboard changes | 128 | 0 | 0 |
-| Fresh clone, no password | Before the Update Status and keyboard changes | 107 | 0 | 21 |
+| No backend, no password (what CI runs) | Current | 110 | 0 | 22 |
 
 The sign-up UI flow is not fully stable. It sometimes fails when the app crashes inside `XCTAutomationSupport`, Xcode's test support library. The UI flows also retry dropped taps, which happened while the machine was under heavy load.
 
